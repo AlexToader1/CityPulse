@@ -157,6 +157,7 @@
   inset: 0;
   border-radius: 9999px;
   border: 2px solid var(--cp-ink);
+  pointer-events: none;
   animation: cp-pulse 1.8s ease-out infinite;
 }
 
