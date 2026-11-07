@@ -1,0 +1,169 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* The brand reveal overrides --cp-primary; registering it lets the color itself transition. */
+@property --cp-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ffe14d;
+}
+
+:root {
+  color-scheme: light;
+
+  /* CityPulse palette — the only colors used anywhere in the app. */
+  --cp-cream: #faf5ee;
+  --cp-white: #ffffff;
+  --cp-ink: #111111;
+  --cp-yellow: #ffe14d;
+  --cp-lime: #b8f24a;
+  --cp-pink: #ff5fa8;
+  --cp-sky: #3da5ff;
+  --cp-orange: #ffb066;
+  --cp-lavender: #c9b6ff;
+  --cp-mint: #dcebdd;
+  --cp-grey: #b8b8b8;
+  --cp-primary: var(--cp-yellow);
+
+  --radius: 0.875rem;
+
+  --background: var(--cp-cream);
+  --foreground: var(--cp-ink);
+  --card: var(--cp-white);
+  --card-foreground: var(--cp-ink);
+  --popover: var(--cp-white);
+  --popover-foreground: var(--cp-ink);
+  --primary: var(--cp-primary);
+  --primary-foreground: var(--cp-ink);
+  --secondary: var(--cp-white);
+  --secondary-foreground: var(--cp-ink);
+  --muted: var(--cp-cream);
+  --muted-foreground: #3a3a3a;
+  --accent: var(--cp-mint);
+  --accent-foreground: var(--cp-ink);
+  --destructive: var(--cp-pink);
+  --border: var(--cp-ink);
+  --input: var(--cp-ink);
+  --ring: var(--cp-ink);
+
+  transition: --cp-primary 600ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, monospace;
+
+  --color-cream: var(--cp-cream);
+  --color-ink: var(--cp-ink);
+  --color-yellow: var(--cp-yellow);
+  --color-lime: var(--cp-lime);
+  --color-pink: var(--cp-pink);
+  --color-sky: var(--cp-sky);
+  --color-orange: var(--cp-orange);
+  --color-lavender: var(--cp-lavender);
+  --color-mint: var(--cp-mint);
+  --color-grey: var(--cp-grey);
+  --color-primary: var(--cp-primary);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  --shadow-nb: 4px 4px 0 0 var(--cp-ink);
+  --shadow-nb-sm: 2px 2px 0 0 var(--cp-ink);
+  --shadow-nb-lg: 6px 6px 0 0 var(--cp-ink);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-size: 18px;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+  :focus-visible {
+    outline: 3px solid var(--cp-ink);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 6px var(--cp-yellow);
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  .nb-card {
+    @apply rounded-xl border-2 border-ink bg-white shadow-nb;
+  }
+  .nb-btn,
+  .nb-btn-primary,
+  .nb-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border-2 border-ink px-5 py-2.5 font-bold text-ink shadow-nb transition-transform duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .nb-btn-primary {
+    @apply bg-primary;
+  }
+  .nb-btn-secondary {
+    @apply bg-white;
+  }
+  .nb-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border-2 border-ink px-3 py-1 text-sm font-bold text-ink;
+  }
+  .mono-label {
+    @apply font-mono text-xs font-bold uppercase tracking-wider;
+  }
+}
+
+@keyframes cp-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+.cp-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid var(--cp-ink);
+  pointer-events: none;
+  animation: cp-pulse 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-pulse::before {
+    animation: none;
+    opacity: 0;
+  }
+}
