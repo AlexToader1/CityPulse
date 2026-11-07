@@ -1,7 +1,7 @@
 import { ACTION_COST, SIGNAL_WEIGHTS, decide } from './config'
 import { BASE_CITIES, EVENT_PRESETS } from './mock-data'
 import { computeScore } from './score'
-import type { CityResult, Signal } from './types'
+import type { CityResult, FeedItem, Signal } from './types'
 
 export function finalizeCity(base: Omit<CityResult, 'score' | 'action' | 'costUsd' | 'minutesSaved'>): CityResult {
   const score = computeScore(base.signals, SIGNAL_WEIGHTS)
@@ -37,4 +37,16 @@ export function runStats(cities: CityResult[]) {
     costUsd: cities.reduce((s, c) => s + c.costUsd, 0),
     minutesSaved: cities.reduce((s, c) => s + c.minutesSaved, 0),
   }
+}
+
+/** Turn each city's real signals into feed rows, strongest first. */
+export function feedFromCities(cities: CityResult[]): Omit<FeedItem, 'id'>[] {
+  return cities
+    .flatMap((c) =>
+      c.signals
+        .filter((s) => s.strength > 0)
+        .map((s) => ({ city: c.city, type: s.type, text: s.label, source: s.source, strength: s.strength })),
+    )
+    .sort((a, b) => b.strength - a.strength)
+    .map(({ strength: _strength, ...item }) => item)
 }

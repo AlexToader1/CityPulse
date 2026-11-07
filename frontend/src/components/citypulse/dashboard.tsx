@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { fetchCities } from '@/lib/citypulse/api'
-import { applyPreset } from '@/lib/citypulse/cities'
+import { applyPreset, feedFromCities } from '@/lib/citypulse/cities'
 import { EVENT_PRESETS } from '@/lib/citypulse/mock-data'
 import type { BrandDNA, BusinessCategory, CityResult } from '@/lib/citypulse/types'
 import { AdStudio, type AdView } from './ad-studio'
@@ -37,6 +37,7 @@ export function Dashboard({
   const mapRef = useRef<HeatmapHandle>(null)
 
   const cities = useMemo(() => applyPreset(base, presetId), [base, presetId])
+  const feedPool = useMemo(() => feedFromCities(base), [base])
   const selectedCity = cities.find((c) => c.city === selected) ?? null
 
   const prevActions = useRef<Map<string, CityResult['action']> | null>(null)
@@ -121,7 +122,7 @@ export function Dashboard({
 
             <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
               <BrandStrip brand={brand} />
-              <SignalFeed cities={selectedCities} activePreset={presetId} onSimulate={simulate} burst={burst} />
+              <SignalFeed cities={selectedCities} pool={feedPool} activePreset={presetId} onSimulate={simulate} burst={burst} />
             </div>
           </div>
 

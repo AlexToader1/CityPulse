@@ -6,3 +6,5 @@ urllib3<2
 google-genai
 fastapi
 uvicorn
+python-multipart
+Pillow

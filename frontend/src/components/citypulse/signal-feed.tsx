@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronDown, Zap } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { EVENT_PRESETS, FEED_POOL } from '@/lib/citypulse/mock-data'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { EVENT_PRESETS } from '@/lib/citypulse/mock-data'
 import type { FeedItem } from '@/lib/citypulse/types'
 import { SignalShape, SourceTag } from './primitives'
 
@@ -13,24 +13,30 @@ export type FeedBurst = { id: number; items: Omit<FeedItem, 'id'>[] }
 
 export function SignalFeed({
   cities,
+  pool: poolItems,
   activePreset,
   onSimulate,
   burst,
 }: {
   cities: string[]
+  /** Real signals from the API (see feedFromCities). */
+  pool: Omit<FeedItem, 'id'>[]
   activePreset: string | null
   onSimulate: (id: string | null) => void
   burst: FeedBurst | null
 }) {
   const reduce = useReducedMotion()
-  const pool = FEED_POOL.filter((f) => cities.includes(f.city))
-  const [items, setItems] = useState<FeedItem[]>(() => pool.slice(0, 3).map((f, i) => ({ ...f, id: `seed-${i}` })))
+  const pool = useMemo(() => poolItems.filter((f) => cities.includes(f.city)), [poolItems, cities])
+  const poolKey = pool.map((f) => `${f.city}|${f.text}`).join('~')
+  const [items, setItems] = useState<FeedItem[]>(() => pool.slice(0, 4).map((f, i) => ({ ...f, id: `seed-${i}` })))
   const [open, setOpen] = useState(false)
-  const cursor = useRef(3)
+  const cursor = useRef(4)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!pool.length) return
+    cursor.current = 4
+    setItems(pool.slice(0, 4).map((f, i) => ({ ...f, id: `seed-${i}-${poolKey.length}` })))
+    if (pool.length <= 4) return
     const t = setInterval(() => {
       const next = pool[cursor.current % pool.length]
       cursor.current++
@@ -38,7 +44,7 @@ export function SignalFeed({
     }, 3400)
     return () => clearInterval(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cities.join(',')])
+  }, [poolKey])
 
   useEffect(() => {
     if (!burst) return
@@ -113,6 +119,7 @@ export function SignalFeed({
         </div>
       </div>
       <ul className="flex flex-col gap-2 p-4" aria-live="polite">
+        {items.length === 0 && <li className="text-sm">Waiting for signals…</li>}
         <AnimatePresence initial={false}>
           {items.map((f) => (
             <motion.li

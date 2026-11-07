@@ -28,15 +28,15 @@ def _city_score(city: dict[str, Any], days: int) -> dict[str, Any]:
     except (RuntimeError, ValueError) as error:
         weather = {"forecast": []}
         weather_status = f"weather unavailable: {error}"
-    active_events = context["events"]
-    active_holidays = context["holidays"]
+    active_events = context.get("events", [])
+    active_holidays = context.get("holidays", [])
     rain_probability = max(
-        (day["precipitation_probability_percent"] for day in weather["forecast"]),
+        (day["precipitation_probability_percent"] for day in weather.get("forecast", [])),
         default=0,
     )
     event_score = min(
         35.0,
-        sum(float(event["relevance"]) for event in active_events) * 25,
+        sum(float(event.get("relevance", 0.0)) for event in active_events) * 25,
     )
     holiday_score = min(20.0, len(active_holidays) * 10.0)
     weather_score = 15.0 if rain_probability >= 50 else 7.0
@@ -51,10 +51,10 @@ def _city_score(city: dict[str, Any], days: int) -> dict[str, Any]:
         "signals": {
             "events": active_events,
             "holidays": active_holidays,
-            "namedays": context["namedays"],
+            "namedays": context.get("namedays", []),
             "rain_probability_percent": rain_probability,
         },
-        "data_status": f"curated demo events; {weather_status}",
+        "data_status": f"{context.get('data_status', 'events status unknown')}; {weather_status}",
     }
 
 
