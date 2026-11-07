@@ -1,0 +1,58 @@
+[
+  {
+    "id": "bucharest",
+    "name": "Bucharest",
+    "county": "Bucharest",
+    "latitude": 44.4268,
+    "longitude": 26.1025
+  },
+  {
+    "id": "cluj-napoca",
+    "name": "Cluj-Napoca",
+    "county": "Cluj",
+    "latitude": 46.7712,
+    "longitude": 23.6236
+  },
+  {
+    "id": "iasi",
+    "name": "Iasi",
+    "county": "Iasi",
+    "latitude": 47.1585,
+    "longitude": 27.6014
+  },
+  {
+    "id": "constanta",
+    "name": "Constanta",
+    "county": "Constanta",
+    "latitude": 44.1598,
+    "longitude": 28.6348
+  },
+  {
+    "id": "timisoara",
+    "name": "Timisoara",
+    "county": "Timis",
+    "latitude": 45.7489,
+    "longitude": 21.2087
+  },
+  {
+    "id": "brasov",
+    "name": "Brasov",
+    "county": "Brasov",
+    "latitude": 45.6427,
+    "longitude": 25.5887
+  },
+  {
+    "id": "sibiu",
+    "name": "Sibiu",
+    "county": "Sibiu",
+    "latitude": 45.7983,
+    "longitude": 24.1256
+  },
+  {
+    "id": "craiova",
+    "name": "Craiova",
+    "county": "Dolj",
+    "latitude": 44.3302,
+    "longitude": 23.7949
+  }
+]

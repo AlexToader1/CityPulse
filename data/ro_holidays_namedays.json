@@ -1,0 +1,85 @@
+{
+  "country": "Romania",
+  "holidays": [
+    {
+      "id": "new-year-day",
+      "name": "New Year's Day",
+      "date": "2026-01-01",
+      "type": "national_holiday"
+    },
+    {
+      "id": "unification-day",
+      "name": "Unification Day",
+      "date": "2026-01-24",
+      "type": "national_holiday"
+    },
+    {
+      "id": "labour-day",
+      "name": "Labour Day",
+      "date": "2026-05-01",
+      "type": "national_holiday"
+    },
+    {
+      "id": "childrens-day",
+      "name": "Children's Day",
+      "date": "2026-06-01",
+      "type": "national_holiday"
+    },
+    {
+      "id": "assumption-day",
+      "name": "Assumption of Mary",
+      "date": "2026-08-15",
+      "type": "national_holiday"
+    },
+    {
+      "id": "st-andrews-day",
+      "name": "Saint Andrew's Day",
+      "date": "2026-11-30",
+      "type": "national_holiday"
+    },
+    {
+      "id": "national-day",
+      "name": "Romania's National Day",
+      "date": "2026-12-01",
+      "type": "national_holiday"
+    },
+    {
+      "id": "christmas-day",
+      "name": "Christmas Day",
+      "date": "2026-12-25",
+      "type": "national_holiday"
+    },
+    {
+      "id": "second-christmas-day",
+      "name": "Second Day of Christmas",
+      "date": "2026-12-26",
+      "type": "national_holiday"
+    }
+  ],
+  "namedays": [
+    {
+      "date": "2026-11-08",
+      "names": ["Mihai", "Gabriel"]
+    },
+    {
+      "date": "2026-11-21",
+      "names": ["Mihail", "Rafail"]
+    },
+    {
+      "date": "2026-11-30",
+      "names": ["Andrei", "Andreea"]
+    },
+    {
+      "date": "2026-12-06",
+      "names": ["Nicolae", "Nicoleta"]
+    },
+    {
+      "date": "2026-12-25",
+      "names": ["Eugenia"]
+    },
+    {
+      "date": "2026-12-27",
+      "names": ["Stefan", "Stefania"]
+    }
+  ]
+}
