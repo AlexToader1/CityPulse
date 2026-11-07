@@ -67,9 +67,12 @@ def get_job(job_id: str):
 
 
 class PublishRequest(BaseModel):
-    variant_id: str
+    variant_id: str = "v1"
     mode: Literal["direct", "draft"] = "direct"
     privacy_level: Optional[str] = None  # e.g. SELF_ONLY, PUBLIC_TO_EVERYONE (needs audited app)
+
+    # Pre-fills the request body in the /docs page
+    model_config = {"json_schema_extra": {"example": {"variant_id": "v1", "mode": "direct"}}}
 
 
 @router.post("/jobs/{job_id}/publish", response_model=PublishResult)
