@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend import config
 from backend.routes.ad import router as ad_router
+from backend.routes.ad_image import router as ad_image_router
 from backend.routes.brand import router as brand_router
 from backend.routes.cities import router as cities_router
 from backend.routes.city import router as city_router
@@ -27,7 +28,7 @@ from backend.routes.status import router as status_router
 from backend.routes.studio import router as studio_router
 from backend.routes.tiktok import router as tiktok_router
 from backend.routes.video import router as video_router
-from backend.services.signals import warm_trends
+from backend.services.signals import warm_climate, warm_trends
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -35,6 +36,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 async def lifespan(_: FastAPI):
     # Google Trends is slow (a few seconds per city): fill its cache in the background at startup.
     threading.Thread(target=warm_trends, args=("Cafe",), daemon=True).start()
+    threading.Thread(target=warm_climate, daemon=True).start()  # each city's seasonal normal
     yield
 
 
@@ -56,6 +58,7 @@ for router in (
     cities_router,      # POST /api/cities       dashboard heatmap
     brand_router,       # POST /api/brand        upload -> brand DNA
     ad_router,          # POST /api/generate-ad  per-city ad copy
+    ad_image_router,    # POST /api/generate-ad-image  edit master ad per city
     compliance_router,  # POST /api/compliance
     export_router,      # POST /api/export
     heatmap_router,     # GET  /api/heatmap      (legacy shape)

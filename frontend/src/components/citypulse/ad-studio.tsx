@@ -4,8 +4,9 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { Check, ChevronDown, Download, Pencil, RefreshCw, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { checkCompliance, exportAd, generateAd } from '@/lib/citypulse/api'
+import { checkCompliance, generateAd, generateAdImage } from '@/lib/citypulse/api'
 import { THRESHOLDS } from '@/lib/citypulse/config'
+import { adFileName, adPalette, downloadBlob, renderAdCanvas } from '@/lib/citypulse/render-ad'
 import { openTikTokStudio } from '@/lib/citypulse/tiktok'
 import type { BrandDNA, CityResult, Compliance, ExportFormat, GeneratedAd } from '@/lib/citypulse/types'
 import { cn } from '@/lib/utils'
@@ -20,7 +21,7 @@ const STATUS_STYLE: Record<Compliance['status'], { bg: string; label: string }> 
   blocked: { bg: 'bg-pink', label: 'Held back' },
 }
 
-type Done = { ad: GeneratedAd; compliance: Compliance }
+type Done = { ad: GeneratedAd; compliance: Compliance; imageUrl?: string | null; imageNote?: string }
 type State = { kind: 'idle' } | { kind: 'generating'; step: number } | { kind: 'done'; result: Done } | { kind: 'error' }
 
 export type AdView = 'master' | 'tailored'
@@ -68,6 +69,8 @@ export function AdStudio({
       }
     })()
     const adRes = await generateAd({ city, brand })
+    // Edit the master image for this city; a failure here is not fatal (motif art is the fallback).
+    const imgRes = adRes.ok ? await generateAdImage({ city, brand }, force) : null
     const compRes = adRes.ok
       ? await checkCompliance({ city: city.city, headline: adRes.data.headline, body: adRes.data.body, draft: city.compliance })
       : null
@@ -77,7 +80,7 @@ export function AdStudio({
       setState({ kind: 'error' })
       return
     }
-    const result = { ad: adRes.data, compliance: compRes.data }
+    const result = { ad: adRes.data, compliance: compRes.data, imageUrl: imgRes?.ok ? imgRes.data.imageUrl : null, imageNote: imgRes?.ok ? imgRes.data.detail : imgRes?.error }
     cache.current.set(cacheKey, result)
     setState({ kind: 'done', result })
   }
@@ -112,7 +115,7 @@ export function AdStudio({
     if (state.kind !== 'done' || !city) return
     const res = await checkCompliance({ city: city.city, ...draft, draft: state.result.compliance, edited: true })
     if (!res.ok) return toast('That check did not finish. Try again.', 'pink')
-    const result = { ad: { ...state.result.ad, ...draft }, compliance: res.data }
+    const result = { ...state.result, ad: { ...state.result.ad, ...draft }, compliance: res.data }
     cache.current.set(cacheKey, result)
     setState({ kind: 'done', result })
     setEditing(false)
@@ -127,10 +130,29 @@ export function AdStudio({
   }
 
   async function doExport(format: ExportFormat) {
-    if (!city) return
+    if (!city || state.kind !== 'done') return
     setExportOpen(false)
-    const res = await exportAd({ city: city.city, format })
-    toast(res.ok ? `Exported ${res.data.fileName}` : "That didn't export. Try again.", res.ok ? 'lime' : 'pink')
+    try {
+      const r = state.result
+      const { bg, accent } = adPalette(brand.swatches)
+      const canvas = await renderAdCanvas({
+        imageUrl: r.imageUrl ?? brand.imageUrl,
+        headline: r.ad.headline,
+        body: r.ad.body,
+        cta: brand.cta,
+        brandName: brand.name,
+        bg,
+        accent,
+        format,
+      })
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'))
+      if (!blob) throw new Error('Could not create the image')
+      const fileName = adFileName(city.city, format)
+      downloadBlob(blob, fileName)
+      toast(`Saved ${fileName}`, 'lime')
+    } catch {
+      toast("That didn't export. Try again.", 'pink')
+    }
   }
 
   if (!city) {
@@ -241,6 +263,7 @@ export function AdStudio({
                   body={view === 'master' ? brand.masterBody : result.ad.body}
                   motif={view === 'master' ? 'plain' : result.ad.motif}
                   variant={view}
+                  tailoredImageUrl={result.imageUrl}
                   wipeKey={`${cacheKey}-${view}-${result.ad.headline}`}
                 />
 
@@ -250,6 +273,9 @@ export function AdStudio({
                     <span className="nb-pill bg-lavender text-xs">{actionLabel}</span>
                   </div>
                   <p className="mt-2 leading-relaxed">{result.ad.reason}</p>
+                  {city.action === 'GENERATE' && result.imageNote && (
+                    <p className="mt-2 rounded-lg border-2 border-ink bg-yellow p-2 text-sm">{result.imageUrl ? `AI image unavailable, used a basic local effect instead: ${result.imageNote}` : `Image not edited: ${result.imageNote}`}</p>
+                  )}
                 </div>
 
                 <AnimatePresence mode="wait">

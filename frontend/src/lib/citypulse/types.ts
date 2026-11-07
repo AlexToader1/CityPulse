@@ -103,3 +103,5 @@ export type FeedItem = {
   text: string
   source: SignalSource
 }
+
+export type GeneratedAdImage = { imageUrl: string | null; imageData?: string; source: 'gemini' | 'cache' | 'local' | 'fallback' | 'skipped'; detail?: string }

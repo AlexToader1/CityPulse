@@ -1,6 +1,6 @@
 import { extractSwatches, legibleOnInk } from './brand-colors'
 import { baseCityResults } from './cities'
-import { API_BASE_URL, MOCK_DELAY_MS, MOCK_FAILURE_RATE } from './config'
+import { API_BASE_URL, BACKEND_ORIGIN, MOCK_DELAY_MS, MOCK_FAILURE_RATE } from './config'
 import { ALL_CITIES, BASE_CITIES, SAMPLE_BRAND_SWATCHES, sampleBrand } from './mock-data'
 import type {
   AnalyzeBrandRequest,
@@ -15,6 +15,7 @@ import type {
   FetchCitiesResponse,
   GenerateAdRequest,
   GeneratedAd,
+  GeneratedAdImage,
 } from './types'
 
 const SUPERLATIVES = ['cel mai bun', 'cea mai buna', 'perfect', 'garantat', 'numarul 1']
@@ -147,4 +148,25 @@ export async function exportAd(req: ExportAdRequest): Promise<ApiResult<ExportAd
     }),
     false,
   )
+}
+
+/** Edits the uploaded master ad for one city (only GENERATE cities). imageUrl null = keep the motif art. */
+export async function generateAdImage(req: GenerateAdRequest, force = false): Promise<ApiResult<GeneratedAdImage>> {
+  if (!API_BASE_URL) return { ok: true, data: { imageUrl: null, source: 'skipped', detail: 'Mock mode: no backend configured' } }
+  if (!req.brand.imageUrl) return { ok: true, data: { imageUrl: null, source: 'skipped', detail: 'No master ad uploaded (sample brand), so there is nothing to edit' } }
+  if (req.city.action !== 'GENERATE') return { ok: true, data: { imageUrl: null, source: 'skipped' } }
+  try {
+    const blob = await (await fetch(req.brand.imageUrl)).blob()
+    const form = new FormData()
+    form.append('file', blob, 'master.png')
+    form.append('city', JSON.stringify(req.city))
+    form.append('brand', JSON.stringify({ ...req.brand, imageUrl: null }))
+    form.append('force', String(force))
+    const res = await fetch(`${API_BASE_URL}/generate-ad-image`, { method: 'POST', body: form })
+    if (!res.ok) return { ok: false, error: await errorMessage(res) }
+    const data = (await res.json()) as GeneratedAdImage
+    return { ok: true, data: { ...data, imageUrl: data.imageData ?? (data.imageUrl ? `${BACKEND_ORIGIN}${data.imageUrl}` : null) } }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Network error' }
+  }
 }

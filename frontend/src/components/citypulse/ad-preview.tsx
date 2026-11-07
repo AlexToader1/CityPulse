@@ -1,8 +1,10 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { contrastWithInk, hexToRgb } from '@/lib/citypulse/brand-colors'
+import { renderAdCanvas } from '@/lib/citypulse/render-ad'
 import type { BrandDNA, Motif } from '@/lib/citypulse/types'
 
 type Props = {
@@ -12,7 +14,13 @@ type Props = {
   motif: Motif
   /** Master shows the uploaded ad as-is when one exists. */
   variant: 'master' | 'tailored'
+  /** AI-edited version of the master image for this city. */
+  tailoredImageUrl?: string | null
   wipeKey: string
+}
+
+function artUrlFor(variant: string, url?: string | null, failed?: string | null) {
+  return variant === 'tailored' && url && url !== failed ? url : null
 }
 
 function palette(brand: BrandDNA) {
@@ -77,22 +85,39 @@ function MotifArt({ motif, a1, a2, a3 }: { motif: Motif; a1: string; a2: string;
   )
 }
 
-export function AdPreview({ brand, headline, body, motif, variant, wipeKey }: Props) {
+export function AdPreview({ brand, headline, body, motif, variant, tailoredImageUrl, wipeKey }: Props) {
   const reduce = useReducedMotion()
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const { bg, a1, a2, a3 } = palette(brand)
-  const showUpload = brand.imageUrl && (variant === 'master' || motif === 'plain')
+  const srcImg = variant === 'tailored' ? (artUrlFor(variant, tailoredImageUrl, failedUrl) ?? (brand.imageUrl && motif === 'plain' ? brand.imageUrl : null)) : null
+  const [composite, setComposite] = useState<string | null>(null)
+  useEffect(() => {
+    if (!srcImg) return setComposite(null)
+    let cancelled = false
+    renderAdCanvas({ imageUrl: srcImg, headline, body, cta: brand.cta, brandName: brand.name, bg, accent: a1, format: 'instagram_feed' }, 0.6)
+      .then((c) => !cancelled && setComposite(c.toDataURL('image/jpeg', 0.9)))
+      .catch(() => !cancelled && setComposite(null))
+    return () => {
+      cancelled = true
+    }
+  }, [srcImg, headline, body, brand.cta, brand.name, bg, a1])
+  const artUrl = artUrlFor(variant, tailoredImageUrl, failedUrl)
+  const showUpload = !!artUrl || (brand.imageUrl && (variant === 'master' || motif === 'plain'))
 
   return (
     <div className="relative aspect-square w-full overflow-hidden rounded-xl border-2 border-ink" style={{ background: bg }}>
       {showUpload && variant === 'master' ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={brand.imageUrl!} alt={`Master ad from ${brand.name}`} className="size-full object-cover" />
+      ) : composite ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={composite} alt={`Ad: ${headline}`} className="size-full object-cover" />
       ) : (
         <div className="flex size-full flex-col text-ink">
           <div className="min-h-0 flex-1">
             {showUpload ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={brand.imageUrl!} alt="" className="size-full object-cover" />
+              <img src={artUrl ?? brand.imageUrl!} alt="" className="size-full object-cover" onError={() => artUrl && setFailedUrl(artUrl)} />
             ) : (
               <MotifArt motif={variant === 'master' ? 'plain' : motif} a1={a1} a2={a2} a3={a3} />
             )}

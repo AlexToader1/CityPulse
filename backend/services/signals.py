@@ -111,14 +111,107 @@ def get_weather(city: dict[str, Any]) -> list[dict[str, Any]] | None:
     return _cached(f"wx:{city['id']}", 900, lambda: _fetch_weather(city))
 
 
-def weather_signal(days: list[dict[str, Any]] | None) -> tuple[dict[str, Any] | None, str]:
-    """-> (signal, motif hint). motif hint is 'storm' | 'heat' | 'plain'."""
+CLIMATE_YEARS = 3
+CLIMATE_WINDOW = 8  # +/- days around today, in each past year
+
+
+def _fetch_climate(city: dict[str, Any]) -> dict[str, float]:
+    """This city's own normal for the time of year: mean/spread of temperature and how often it rains,
+    from the last CLIMATE_YEARS years of Open-Meteo archive data around today's date."""
+    end = date.today() - timedelta(days=7)  # the archive lags a few days
+    start = end - timedelta(days=365 * CLIMATE_YEARS)
+    data = _get_json(
+        "https://archive-api.open-meteo.com/v1/archive",
+        {
+            "latitude": city["latitude"],
+            "longitude": city["longitude"],
+            "start_date": start.isoformat(),
+            "end_date": end.isoformat(),
+            "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum",
+            "timezone": "auto",
+        },
+    )["daily"]
+    today_doy = date.today().timetuple().tm_yday
+    tmax, tmin, rain = [], [], []
+    for i, day in enumerate(data["time"]):
+        doy = date.fromisoformat(day).timetuple().tm_yday
+        if min(abs(doy - today_doy), 365 - abs(doy - today_doy)) > CLIMATE_WINDOW:
+            continue
+        if data["temperature_2m_max"][i] is None or data["temperature_2m_min"][i] is None:
+            continue
+        tmax.append(float(data["temperature_2m_max"][i]))
+        tmin.append(float(data["temperature_2m_min"][i]))
+        rain.append(float(data["precipitation_sum"][i] or 0))
+    if len(tmax) < 10:
+        raise RuntimeError("not enough climate data")
+
+    def mean(v: list[float]) -> float:
+        return sum(v) / len(v)
+
+    def sd(v: list[float]) -> float:
+        m = mean(v)
+        return (sum((x - m) ** 2 for x in v) / len(v)) ** 0.5
+
+    rain_sorted = sorted(rain)
+    return {
+        "tmax_mean": mean(tmax),
+        "tmax_sd": sd(tmax),
+        "tmin_mean": mean(tmin),
+        "tmin_sd": sd(tmin),
+        "wet_rate": sum(1 for r in rain if r >= 1.0) / len(rain),
+        "rain_p90": rain_sorted[int(0.9 * (len(rain_sorted) - 1))],
+    }
+
+
+def get_climate(city: dict[str, Any]) -> dict[str, float] | None:
+    return _cached(f"clim:{city['id']}", 24 * 3600, lambda: _fetch_climate(city))
+
+
+def warm_climate() -> None:
+    for city in load_cities():
+        get_climate(city)
+
+
+def weather_signal(days: list[dict[str, Any]] | None, climate: dict[str, float] | None = None) -> tuple[dict[str, Any] | None, str]:
+    """-> (signal, motif hint). motif hint is 'storm' | 'heat' | 'plain'.
+
+    With a climate baseline the strength depends on how unusual the weather is FOR THIS CITY at this
+    time of year (normal weather scores 0). Without one it falls back to fixed absolute rules."""
     if not days:
         return None, "plain"
     worst_rain = max(days, key=lambda d: (d["rain_prob"], d["rain_mm"]))
     hottest = max(days, key=lambda d: d["tmax"])
     coldest = min(days, key=lambda d: d["tmin"])
-    stormy = worst_rain["code"] >= 95 or worst_rain["rain_mm"] >= 10 or worst_rain["wind"] >= 60
+    stormy = worst_rain["code"] >= 95 or worst_rain["rain_mm"] >= 10 or worst_rain["wind"] >= 60  # severe anywhere
+
+    if climate:
+        hot_dev = hottest["tmax"] - climate["tmax_mean"]
+        cold_dev = climate["tmin_mean"] - coldest["tmin"]
+        hot_z = hot_dev / max(2.5, climate["tmax_sd"])
+        cold_z = cold_dev / max(2.5, climate["tmin_sd"])
+        wet_excess = worst_rain["rain_prob"] / 100 - climate["wet_rate"]
+        rain_unusual = worst_rain["rain_prob"] >= 50 and (
+            wet_excess >= 0.3 or worst_rain["rain_mm"] >= max(5.0, climate["rain_p90"])
+        )
+        if stormy or rain_unusual:
+            strength = 45 if stormy else min(40, round(16 + wet_excess * 55))
+            label = f"{worst_rain['desc']}, {worst_rain['rain_prob']}% rain (usually {round(climate['wet_rate'] * 100)}% of days)"
+            return {"type": "weather", "label": label, "source": "live", "strength": strength}, "storm"
+        if hot_z >= 1.0 and hottest["tmax"] >= 22:
+            strength = min(45, round(14 + (hot_z - 1.0) * 14))
+            label = f"Heat, {round(hottest['tmax'])}°C ({hot_dev:+.0f}° vs this city's normal)"
+            return {"type": "weather", "label": label, "source": "live", "strength": strength}, "heat"
+        if cold_z >= 1.5:
+            strength = min(35, round(12 + (cold_z - 1.5) * 10))
+            label = f"Colder than usual, {round(coldest['tmin'])}°C ({-cold_dev:+.0f}° vs this city's normal)"
+            return {"type": "weather", "label": label, "source": "live", "strength": strength}, "plain"
+        today = days[0]
+        return (
+            {"type": "weather", "label": f"{today['desc']}, {round(today['tmax'])}°C, normal for the season", "source": "live", "strength": 0},
+            "plain",
+        )
+
+    # --- no baseline available: fixed rules ---
     if stormy or worst_rain["rain_prob"] >= 70:
         strength = 45 if stormy else 32
         label = f"{worst_rain['desc']}, {worst_rain['rain_prob']}% rain"
@@ -136,7 +229,7 @@ def weather_signal(days: list[dict[str, Any]] | None) -> tuple[dict[str, Any] | 
         )
     today = days[0]
     return (
-        {"type": "weather", "label": f"{today['desc']}, {round(today['tmax'])}°C", "source": "live", "strength": 15},
+        {"type": "weather", "label": f"{today['desc']}, {round(today['tmax'])}°C", "source": "live", "strength": 5},
         "plain",
     )
 
@@ -245,12 +338,13 @@ def trend_signals(city: dict[str, Any], category: str) -> list[dict[str, Any]]:
         label = f'Searches for "{data["keyword"]}" down {abs(pct)}%'
     else:
         label = f'Searches for "{data["keyword"]}" steady'
-    strength = 5 + float(data["level"]) * 0.12 + max(-8.0, min(10.0, momentum * 25))
-    signals = [{"type": "trend", "label": label, "source": "live", "strength": round(max(3, min(28, strength)))}]
+    # Only the change against this city's own recent history counts, not how big the city's search volume is.
+    strength = 3 + momentum * 45
+    signals = [{"type": "trend", "label": label, "source": "live", "strength": round(max(0, min(28, strength)))}]
     if data["rising"]:
-        signals.append({"type": "trend", "label": f'Rising search: "{_short(data["rising"][0][0])}"', "source": "live", "strength": 8})
+        signals.append({"type": "trend", "label": f'Rising search: "{_short(data["rising"][0][0])}"', "source": "live", "strength": 6})
     elif data["top"]:
-        signals.append({"type": "trend", "label": f'Top search: "{_short(data["top"][0][0])}"', "source": "live", "strength": 4})
+        signals.append({"type": "trend", "label": f'Top search: "{_short(data["top"][0][0])}"', "source": "live", "strength": 2})
     return signals
 
 
@@ -298,10 +392,35 @@ def decide(score: float) -> str:
     return "SKIP"
 
 
+_event_stats: dict[str, Any] = {}
+
+
+def _event_factor(city_name: str, relevance: float) -> float:
+    """How notable an event is compared with this city's other events (z-score vs the city's own pool,
+    shrunk toward the global pool because the city may only have a few). 1.0 = typical."""
+    if not _event_stats:
+        try:
+            with (ROOT / "data" / "ro_events.json").open(encoding="utf-8") as f:
+                items = json.load(f).get("events", [])
+        except (OSError, ValueError):
+            items = []
+        by_city: dict[str, list[float]] = {}
+        for it in items:
+            by_city.setdefault(_norm(str(it.get("city", ""))), []).append(float(it.get("relevance", 0.5)))
+        allv = [v for vs in by_city.values() for v in vs] or [0.6]
+        _event_stats.update(by_city=by_city, g_mean=sum(allv) / len(allv))
+    own = _event_stats["by_city"].get(_norm(city_name), [])
+    k = 3  # pseudo-events from the global pool
+    n = len(own)
+    mean = (sum(own) + k * _event_stats["g_mean"]) / (n + k)
+    z = (relevance - mean) / 0.2
+    return max(0.5, min(1.3, 1 + 0.35 * z))
+
+
 def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
     category = category if category in MASTER else "Cafe"
     weather = get_weather(city)
-    wx_signal, wx_motif = weather_signal(weather)
+    wx_signal, wx_motif = weather_signal(weather, get_climate(city))
 
     try:
         ctx = get_local_context(city["name"], HOLIDAY_WINDOW_DAYS)
@@ -330,7 +449,7 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
                 "type": "event",
                 "label": f"{ev.get('name', 'Local event')} · {_when(ev['start_date'])}",
                 "source": ev.get("source", "curated"),
-                "strength": round(min(50.0, (15 + float(ev.get("relevance", 0.5)) * 35) * proximity)),
+                "strength": round(min(50.0, (15 + float(ev.get("relevance", 0.5)) * 35) * proximity * _event_factor(city["name"], float(ev.get("relevance", 0.5))))),
             }
         )
     top_holiday = None
