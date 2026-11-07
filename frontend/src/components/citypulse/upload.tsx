@@ -54,6 +54,8 @@ export function Upload({
     if (inputRef.current) inputRef.current.value = ''
   }
 
+  const previewSrc = preview?.startsWith('blob:') ? preview : null
+
   async function run(useSample: boolean) {
     setError(null)
     setPhase('loading')
@@ -129,9 +131,9 @@ export function Upload({
                   transition={{ type: 'spring', stiffness: 380, damping: 20 }}
                   className="mt-4 flex items-center gap-4 rounded-xl border-2 border-ink bg-cream p-4"
                 >
-                  {preview && (
+                  {previewSrc && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={preview} alt="Preview of your master ad" className="size-24 rounded-lg border-2 border-ink object-cover" />
+                    <img src={previewSrc} alt="Preview of your master ad" className="size-24 rounded-lg border-2 border-ink object-cover" />
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold">{file.name}</p>
