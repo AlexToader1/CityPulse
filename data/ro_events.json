@@ -1,6 +1,7 @@
 {
   "source": "Curated CityPulse demo records",
   "last_updated": "2026-11-07",
+  "_comment": "'events' have fixed dates. 'demo_events' are re-dated at runtime to the next given weekday (today counts), so the demo never goes stale.",
   "events": [
     {
       "id": "bucharest-christmas-market-2026",
@@ -81,14 +82,16 @@
       "category": "seasonal",
       "source_url": "https://www.primariacraiova.ro/",
       "relevance": 0.9
-    },
+    }
+  ],
+  "demo_events": [
     {
       "id": "bucharest-coffee-weekend-demo",
       "name": "Bucharest Coffee Weekend (demo)",
       "city": "Bucharest",
-      "start_date": "2026-11-14",
-      "end_date": "2026-11-15",
       "category": "food",
+      "next_weekday": "saturday",
+      "duration_days": 2,
       "source_url": "https://citypulse.local/demo-events",
       "relevance": 0.8
     },
@@ -96,9 +99,9 @@
       "id": "cluj-student-weekend-demo",
       "name": "Cluj Student Weekend (demo)",
       "city": "Cluj-Napoca",
-      "start_date": "2026-11-13",
-      "end_date": "2026-11-15",
       "category": "student",
+      "next_weekday": "friday",
+      "duration_days": 3,
       "source_url": "https://citypulse.local/demo-events",
       "relevance": 0.9
     },
@@ -106,9 +109,9 @@
       "id": "iasi-autumn-food-days-demo",
       "name": "Iasi Autumn Food Days (demo)",
       "city": "Iasi",
-      "start_date": "2026-11-13",
-      "end_date": "2026-11-15",
       "category": "food",
+      "next_weekday": "friday",
+      "duration_days": 3,
       "source_url": "https://citypulse.local/demo-events",
       "relevance": 0.8
     },
@@ -116,9 +119,9 @@
       "id": "constanta-off-season-culture-demo",
       "name": "Constanta Off-Season Culture Days (demo)",
       "city": "Constanta",
-      "start_date": "2026-11-20",
-      "end_date": "2026-11-22",
       "category": "culture",
+      "next_weekday": "friday",
+      "duration_days": 3,
       "source_url": "https://citypulse.local/demo-events",
       "relevance": 0.6
     },
@@ -126,9 +129,9 @@
       "id": "timisoara-design-weekend-demo",
       "name": "Timisoara Design Weekend (demo)",
       "city": "Timisoara",
-      "start_date": "2026-11-14",
-      "end_date": "2026-11-15",
       "category": "culture",
+      "next_weekday": "saturday",
+      "duration_days": 2,
       "source_url": "https://citypulse.local/demo-events",
       "relevance": 0.7
     },
@@ -136,29 +139,19 @@
       "id": "brasov-mountain-weekend-demo",
       "name": "Brasov Mountain Weekend (demo)",
       "city": "Brasov",
-      "start_date": "2026-11-14",
-      "end_date": "2026-11-15",
       "category": "travel",
+      "next_weekday": "saturday",
+      "duration_days": 2,
       "source_url": "https://citypulse.local/demo-events",
       "relevance": 0.8
-    },
-    {
-      "id": "sibiu-christmas-opening-demo",
-      "name": "Sibiu Christmas Market Opening",
-      "city": "Sibiu",
-      "start_date": "2026-11-13",
-      "end_date": "2026-11-15",
-      "category": "seasonal",
-      "source_url": "https://citypulse.local/demo-events",
-      "relevance": 0.9
     },
     {
       "id": "craiova-winter-lights-demo",
       "name": "Craiova Winter Lights (demo)",
       "city": "Craiova",
-      "start_date": "2026-11-14",
-      "end_date": "2026-11-15",
       "category": "seasonal",
+      "next_weekday": "saturday",
+      "duration_days": 2,
       "source_url": "https://citypulse.local/demo-events",
       "relevance": 0.8
     }

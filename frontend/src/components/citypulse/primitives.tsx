@@ -4,6 +4,7 @@ import { animate, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { useEffect, useRef, useState, type ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/citypulse/config'
 import type { SignalSource, SignalType } from '@/lib/citypulse/types'
 
 export function Logo({ className }: { className?: string }) {
@@ -72,7 +73,7 @@ export function DemoBadge() {
   return (
     <span className="nb-pill bg-white">
       <span className="size-2 rounded-full bg-orange ring-2 ring-ink" aria-hidden="true" />
-      <span className="mono-label">Demo data</span>
+      <span className="mono-label">{API_BASE_URL ? 'Live signals + demo events' : 'Demo data'}</span>
     </span>
   )
 }

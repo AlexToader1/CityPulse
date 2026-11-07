@@ -54,32 +54,139 @@
       "name": "Second Day of Christmas",
       "date": "2026-12-26",
       "type": "national_holiday"
+    },
+    {
+      "id": "new-year-day-2027",
+      "name": "New Year's Day",
+      "date": "2027-01-01",
+      "type": "national_holiday"
+    },
+    {
+      "id": "new-year-2-2027",
+      "name": "Second day of New Year",
+      "date": "2027-01-02",
+      "type": "national_holiday"
+    },
+    {
+      "id": "unification-day-2027",
+      "name": "Unification Day",
+      "date": "2027-01-24",
+      "type": "national_holiday"
+    },
+    {
+      "id": "good-friday-2027",
+      "name": "Orthodox Good Friday",
+      "date": "2027-04-30",
+      "type": "national_holiday"
+    },
+    {
+      "id": "labour-day-2027",
+      "name": "Labour Day",
+      "date": "2027-05-01",
+      "type": "national_holiday"
+    },
+    {
+      "id": "orthodox-easter-2027",
+      "name": "Orthodox Easter",
+      "date": "2027-05-02",
+      "type": "national_holiday"
+    },
+    {
+      "id": "easter-monday-2027",
+      "name": "Orthodox Easter Monday",
+      "date": "2027-05-03",
+      "type": "national_holiday"
+    },
+    {
+      "id": "childrens-day-2027",
+      "name": "Children's Day",
+      "date": "2027-06-01",
+      "type": "national_holiday"
+    },
+    {
+      "id": "pentecost-2027",
+      "name": "Orthodox Pentecost",
+      "date": "2027-06-20",
+      "type": "national_holiday"
+    },
+    {
+      "id": "pentecost-monday-2027",
+      "name": "Orthodox Pentecost Monday",
+      "date": "2027-06-21",
+      "type": "national_holiday"
+    },
+    {
+      "id": "assumption-day-2027",
+      "name": "Assumption of Mary",
+      "date": "2027-08-15",
+      "type": "national_holiday"
+    },
+    {
+      "id": "st-andrews-day-2027",
+      "name": "Saint Andrew's Day",
+      "date": "2027-11-30",
+      "type": "national_holiday"
+    },
+    {
+      "id": "national-day-2027",
+      "name": "Romania's National Day",
+      "date": "2027-12-01",
+      "type": "national_holiday"
+    },
+    {
+      "id": "christmas-day-2027",
+      "name": "Christmas Day",
+      "date": "2027-12-25",
+      "type": "national_holiday"
+    },
+    {
+      "id": "second-christmas-day-2027",
+      "name": "Second Day of Christmas",
+      "date": "2027-12-26",
+      "type": "national_holiday"
     }
   ],
   "namedays": [
     {
       "date": "2026-11-08",
-      "names": ["Mihai", "Gabriel"]
+      "names": [
+        "Mihai",
+        "Gabriel"
+      ]
     },
     {
       "date": "2026-11-21",
-      "names": ["Mihail", "Rafail"]
+      "names": [
+        "Mihail",
+        "Rafail"
+      ]
     },
     {
       "date": "2026-11-30",
-      "names": ["Andrei", "Andreea"]
+      "names": [
+        "Andrei",
+        "Andreea"
+      ]
     },
     {
       "date": "2026-12-06",
-      "names": ["Nicolae", "Nicoleta"]
+      "names": [
+        "Nicolae",
+        "Nicoleta"
+      ]
     },
     {
       "date": "2026-12-25",
-      "names": ["Eugenia"]
+      "names": [
+        "Eugenia"
+      ]
     },
     {
       "date": "2026-12-27",
-      "names": ["Stefan", "Stefania"]
+      "names": [
+        "Stefan",
+        "Stefania"
+      ]
     }
   ]
 }

@@ -3,7 +3,8 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Check, Upload as UploadIcon, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { analyzeBrand } from '@/lib/citypulse/api'
+import useSWR from 'swr'
+import { analyzeBrand, fetchCityList } from '@/lib/citypulse/api'
 import { ALL_CITIES, BUSINESS_CATEGORIES } from '@/lib/citypulse/mock-data'
 import type { BrandDNA, BusinessCategory } from '@/lib/citypulse/types'
 import { cn } from '@/lib/utils'
@@ -29,7 +30,13 @@ export function Upload({
   const [fileError, setFileError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [category, setCategory] = useState<BusinessCategory>('Cafe')
-  const [cities, setCities] = useState<string[]>([...ALL_CITIES])
+  // City list comes from the backend (GET /api/cities); the built-in list is only a fallback.
+  const { data: cityList } = useSWR('city-list', fetchCityList, { revalidateOnFocus: false })
+  const available: string[] = cityList?.ok ? cityList.data.map((c) => c.name) : [...ALL_CITIES]
+  // null = "every city" until the person toggles one
+  const [picked, setPicked] = useState<string[] | null>(null)
+  const cities = picked ?? available
+  const setCities = (update: (cs: string[]) => string[]) => setPicked(update(cities))
   const [phase, setPhase] = useState<Phase>('form')
   const [tick, setTick] = useState(0)
   const [brand, setBrand] = useState<BrandDNA | null>(null)
@@ -173,10 +180,10 @@ export function Upload({
                 <span className="font-bold" aria-hidden="true">
                   Cities
                 </span>
-                <span className="mono-label">{`${cities.length} of ${ALL_CITIES.length} selected`}</span>
+                <span className="mono-label">{`${cities.length} of ${available.length} selected`}</span>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                {ALL_CITIES.map((c) => {
+                {available.map((c) => {
                   const on = cities.includes(c)
                   return (
                     <button

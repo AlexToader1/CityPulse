@@ -63,8 +63,12 @@ def generate_ad(request: GenerateAdRequest) -> dict[str, Any]:
     headline, body = city.get("headline", ""), city.get("body", "")
     if action != "SKIP":
         copy = _gemini_copy(city, brand)
-        if copy and check_copy(copy["headline"], copy["body"])["status"] != "blocked":
-            headline, body = copy["headline"], copy["body"]
+        if copy:
+            verdict = check_copy(copy["headline"], copy["body"], category=city.get("category"))
+            if verdict["status"] == "fixed":
+                headline, body = verdict["headline"], verdict["body"]
+            elif verdict["status"] != "blocked":
+                headline, body = copy["headline"], copy["body"]
     cost, minutes = ACTION_COST.get(action, (0.0, 0))
     return {
         "city": city.get("city"),

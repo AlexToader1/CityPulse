@@ -2,30 +2,41 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import { useMemo } from 'react'
-import { baseCityResults } from '@/lib/citypulse/cities'
+import useSWR from 'swr'
+import { fetchCities, fetchCityList } from '@/lib/citypulse/api'
 import { chaikin, fitProjection, ROMANIA_OUTLINE } from '@/lib/citypulse/geo'
 import { heatVar } from '@/lib/citypulse/heat'
 import { ALL_CITIES } from '@/lib/citypulse/mock-data'
+import type { CityResult } from '@/lib/citypulse/types'
 import { DemoBadge } from './primitives'
 
 const W = 600
 const H = 430
 
+/** Landing-page snapshot: every supported city, scored for a default category. */
+async function fetchLandingCities(): Promise<CityResult[]> {
+  const list = await fetchCityList()
+  const names = list.ok ? list.data.map((c) => c.name) : [...ALL_CITIES]
+  const res = await fetchCities({ cities: names, category: 'Cafe' })
+  return res.ok ? res.data : []
+}
+
 export function LandingMap() {
   const reduce = useReducedMotion()
+  const { data: landingCities } = useSWR('landing-cities', fetchLandingCities, { revalidateOnFocus: false })
   const { outline, pins, ribbon } = useMemo(() => {
     const proj = fitProjection(W, H, 34)
     const ring = chaikin(ROMANIA_OUTLINE.map(proj.project), 3)
     const outline = 'M' + ring.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join('L') + 'Z'
-    const cities = baseCityResults([...ALL_CITIES])
+    const cities = landingCities ?? []
     const pins = cities.map((c) => {
       const [x, y] = proj.project([c.lon, c.lat])
       return { ...c, x, y }
     })
     const adapted = pins.filter((p) => p.action !== 'SKIP').sort((a, b) => b.score - a.score)
-    const ribbon = 'M' + adapted.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('L')
+    const ribbon = adapted.length ? 'M' + adapted.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('L') : ''
     return { outline, pins, ribbon }
-  }, [])
+  }, [landingCities])
 
   return (
     <motion.figure

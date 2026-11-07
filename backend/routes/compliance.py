@@ -18,8 +18,9 @@ class ComplianceRequest(BaseModel):
     body: str
     draft: dict[str, Any] | None = None
     edited: bool = False
+    category: str | None = None
 
 
 @router.post("/compliance")
 def check_compliance(request: ComplianceRequest) -> dict[str, Any]:
-    return check_copy(request.headline, request.body, edited=request.edited)
+    return check_copy(request.headline, request.body, edited=request.edited, category=request.category)
