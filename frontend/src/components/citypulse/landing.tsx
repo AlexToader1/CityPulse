@@ -114,8 +114,8 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
         <section className="border-y-2 border-ink bg-orange">
           <p className="mx-auto max-w-7xl px-5 py-6 text-lg font-bold leading-relaxed">
-            Demo data: weather is live, events are curated by us, trend spikes are simulated. The CityPulse score is a
-            prioritization guide, not a prediction.
+            Live data: weather from Open-Meteo and each city&apos;s Google searches. Events come from Ticketmaster when a
+            key is set, otherwise from our curated list. The CityPulse score is a prioritization guide, not a prediction.
           </p>
         </section>
       </main>

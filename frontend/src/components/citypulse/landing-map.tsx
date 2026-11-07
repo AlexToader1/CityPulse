@@ -2,22 +2,28 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import { useMemo } from 'react'
+import useSWR from 'swr'
+import { fetchCities } from '@/lib/citypulse/api'
 import { baseCityResults } from '@/lib/citypulse/cities'
+import { API_BASE_URL } from '@/lib/citypulse/config'
 import { chaikin, fitProjection, ROMANIA_OUTLINE } from '@/lib/citypulse/geo'
 import { heatVar } from '@/lib/citypulse/heat'
 import { ALL_CITIES } from '@/lib/citypulse/mock-data'
-import { DemoBadge } from './primitives'
+import { DemoBadge, LiveBadge } from './primitives'
 
 const W = 600
 const H = 430
 
 export function LandingMap() {
   const reduce = useReducedMotion()
+  // Real signals from the API; the mock cities only show while loading or if the API is unreachable.
+  const { data } = useSWR(API_BASE_URL ? ['landing-cities'] : null, () => fetchCities({ cities: [...ALL_CITIES], category: 'Cafe' }))
+  const live = data?.ok ? data.data : null
   const { outline, pins, ribbon } = useMemo(() => {
     const proj = fitProjection(W, H, 34)
     const ring = chaikin(ROMANIA_OUTLINE.map(proj.project), 3)
     const outline = 'M' + ring.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join('L') + 'Z'
-    const cities = baseCityResults([...ALL_CITIES])
+    const cities = live ?? baseCityResults([...ALL_CITIES])
     const pins = cities.map((c) => {
       const [x, y] = proj.project([c.lon, c.lat])
       return { ...c, x, y }
@@ -25,7 +31,7 @@ export function LandingMap() {
     const adapted = pins.filter((p) => p.action !== 'SKIP').sort((a, b) => b.score - a.score)
     const ribbon = 'M' + adapted.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('L')
     return { outline, pins, ribbon }
-  }, [])
+  }, [live])
 
   return (
     <motion.figure
@@ -33,11 +39,11 @@ export function LandingMap() {
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={{ type: 'spring', stiffness: 220, damping: 22, delay: 0.5 }}
       className="nb-card overflow-hidden shadow-nb-lg"
-      aria-label="Romania, city by city: a demo map of adapted cities and cities that kept the master ad"
+      aria-label={`Romania, city by city: a ${live ? 'live' : 'demo'} map of adapted cities and cities that kept the master ad`}
     >
       <div className="flex items-center justify-between gap-3 border-b-2 border-ink px-4 py-3">
         <figcaption className="font-bold">Romania, city by city</figcaption>
-        <DemoBadge />
+        {live ? <LiveBadge /> : <DemoBadge />}
       </div>
 
       <div

@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,10 +27,18 @@ from backend.routes.status import router as status_router
 from backend.routes.studio import router as studio_router
 from backend.routes.tiktok import router as tiktok_router
 from backend.routes.video import router as video_router
+from backend.services.signals import warm_trends
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-app = FastAPI(title="CityPulse API", version="0.2.0")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Google Trends is slow (a few seconds per city): fill its cache in the background at startup.
+    threading.Thread(target=warm_trends, args=("Cafe",), daemon=True).start()
+    yield
+
+
+app = FastAPI(title="CityPulse API", version="0.2.0", lifespan=lifespan)
 
 origins = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000", "http://127.0.0.1:3000"]
 origins += [o for o in os.getenv("CORS_ORIGINS", "").split(",") if o]

@@ -77,6 +77,15 @@ export function DemoBadge() {
   )
 }
 
+export function LiveBadge() {
+  return (
+    <span className="nb-pill bg-white">
+      <span className="size-2 rounded-full bg-lime ring-2 ring-ink" aria-hidden="true" />
+      <span className="mono-label">Live data</span>
+    </span>
+  )
+}
+
 /** Tween a number toward its target; starts from `from` on mount. */
 export function useTweenedNumber(target: number, { from = 0, duration = 0.6 } = {}) {
   const reduce = useReducedMotion()
