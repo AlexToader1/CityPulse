@@ -8,3 +8,8 @@ fastapi
 uvicorn
 python-multipart
 Pillow
+python-dotenv
+httpx
+anthropic>=2.6
+beautifulsoup4
+imageio-ffmpeg
