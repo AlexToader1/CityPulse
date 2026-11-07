@@ -8,7 +8,7 @@ import type { SignalSource, SignalType } from '@/lib/citypulse/types'
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn('nb-pill bg-primary px-3 py-1 text-base shadow-nb-sm', className)}>
+    <span className={cn('nb-pill !bg-yellow px-3 py-1 text-base shadow-nb-sm', className)}>
       <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
         <path d="M12 1.5l2.6 7.1 7.4.3-5.8 4.6 2 7.2L12 16.6l-6.2 4.1 2-7.2L2 8.9l7.4-.3z" fill="var(--cp-ink)" />
       </svg>
