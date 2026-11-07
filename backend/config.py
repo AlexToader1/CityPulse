@@ -35,6 +35,8 @@ TIKTOK_CLIENT_KEY = _get("TIKTOK_CLIENT_KEY")
 TIKTOK_CLIENT_SECRET = _get("TIKTOK_CLIENT_SECRET")
 TIKTOK_REDIRECT_URI = _get("TIKTOK_REDIRECT_URI", "http://localhost:8000/api/tiktok/callback")
 FRONTEND_URL = _get("FRONTEND_URL", "http://localhost:5173")
+# Where the browser lands after approving TikTok login
+TIKTOK_AFTER_LOGIN_URL = _get("TIKTOK_AFTER_LOGIN_URL", "http://localhost:8000/studio")
 
 # --- Infra ----------------------------------------------------------------------
 PUBLIC_BASE_URL = _get("PUBLIC_BASE_URL", "http://localhost:8000")

@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generator video TikTok</title>
+<style>
+  :root {
+    --bg: #f6f6f8; --card: #fff; --text: #161823; --muted: #6b6f7b; --line: #e4e5ea;
+    --accent: #fe2c55; --accent-dark: #d81e45; --ok: #12805c; --err: #c0182d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121316; --card: #1c1d22; --text: #f2f2f4; --muted: #9a9ca6; --line: #2c2d34; --ok: #3ecf9b; --err: #ff6b7d; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+  label.field { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  input[type=text], select { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; }
+  .row { display: flex; gap: 12px; margin-top: 14px; }
+  .row > div { flex: 1; }
+  .drop { display: block; border: 2px dashed var(--line); border-radius: 12px; padding: 22px 12px; text-align: center; color: var(--muted); cursor: pointer; }
+  .drop:hover, .drop.over { border-color: var(--accent); color: var(--text); }
+  .drop input { display: none; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .thumb { position: relative; width: 72px; height: 72px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb button { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border: 0; border-radius: 50%; background: rgba(0,0,0,.65); color: #fff; cursor: pointer; line-height: 1; padding: 0; }
+  .or { text-align: center; color: var(--muted); font-size: 13px; margin: 14px 0; }
+  button.primary { width: 100%; margin-top: 16px; padding: 14px; border: 0; border-radius: 12px; background: var(--accent); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  button.primary:hover:not(:disabled) { background: var(--accent-dark); }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  .link { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; }
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 10px; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+  .msg { margin: 10px 0 0; font-size: 14px; }
+  .msg.err { color: var(--err); } .msg.ok { color: var(--ok); } .msg.muted { color: var(--muted); }
+  .tt { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 16px; color: var(--muted); }
+  .tt a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .watch { display: block; text-align: center; padding: 12px; border: 2px solid var(--accent); color: var(--accent); border-radius: 12px; font-weight: 700; text-decoration: none; margin-bottom: 12px; }
+  video { width: 100%; max-height: 520px; background: #000; border-radius: 12px; }
+  .angle { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .caption { margin: 10px 0 4px; }
+  .actions { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Generator video TikTok</h1>
+  <p class="sub">Pune pozele produsului, generează videoclipul și postează-l.</p>
+
+  <div class="tt" id="tt">Se verifică TikTok…</div>
+
+  <section class="card" id="form">
+    <label class="drop" id="drop">
+      <input type="file" id="files" accept="image/*" multiple>
+      <strong>Alege pozele produsului</strong><br>
+      <span>sau trage-le aici (2–6 poze)</span>
+    </label>
+    <div class="thumbs" id="thumbs"></div>
+
+    <div class="or">sau folosește un link de produs</div>
+    <label class="field" for="url">Link produs (opțional)</label>
+    <input type="text" id="url" placeholder="https://…">
+
+    <div class="row">
+      <div>
+        <label class="field" for="lang">Limba</label>
+        <select id="lang"><option value="ro">Română</option><option value="en">English</option></select>
+      </div>
+      <div>
+        <label class="field" for="n">Câte variante</label>
+        <select id="n"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+      </div>
+    </div>
+
+    <button class="primary" id="go">Generează videoclip</button>
+    <p class="msg err" id="formErr" hidden></p>
+  </section>
+
+  <section class="card" id="progress" hidden>
+    <strong id="stepText">Pornesc…</strong>
+    <div class="bar"><div id="barFill"></div></div>
+    <p class="msg muted" id="progressNote">Durează de obicei sub un minut.</p>
+    <p class="msg err" id="jobErr" hidden></p>
+    <button class="link" id="again" hidden>Încearcă din nou</button>
+  </section>
+
+  <div id="results"></div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const MAX_FILES = 6;
+let files = [];
+let timer = null;
+let tiktok = { configured: false, connected: false };
+
+const STEPS = [
+  ["Reading the product page", "Citesc pagina produsului…"],
+  ["Collecting product images", "Pregătesc pozele…"],
+  ["Claude is writing", "Scriu scenariul…"],
+  ["Preparing vertical", "Pregătesc imaginile verticale…"],
+  ["Recording voiceover", "Înregistrez vocea…"],
+  ["Rendering video", "Montez videoclipul…"],
+];
+const stepLabel = (s) => (STEPS.find(([k]) => s.startsWith(k)) || [0, s])[1];
+
+function show(el, text) { el.textContent = text; el.hidden = !text; }
+
+// ---- TikTok connection ------------------------------------------------------
+async function loadTikTok() {
+  const box = $("tt");
+  try {
+    tiktok = await (await fetch("/api/tiktok/status")).json();
+  } catch { tiktok = { configured: false, connected: false }; }
+  box.textContent = "";
+  const left = document.createElement("span");
+  if (!tiktok.configured) {
+    left.textContent = "TikTok nu este configurat (poți descărca videoclipurile).";
+    box.append(left);
+  } else if (tiktok.connected) {
+    left.textContent = "TikTok: conectat ca " + ((tiktok.user && tiktok.user.display_name) || "cont");
+    box.append(left);
+  } else {
+    left.textContent = "TikTok: neconectat";
+    const a = document.createElement("a");
+    a.href = "/api/tiktok/login"; a.textContent = "Conectează contul";
+    box.append(left, a);
+  }
+}
+
+// ---- Photos -----------------------------------------------------------------
+function renderThumbs() {
+  const box = $("thumbs");
+  box.textContent = "";
+  files.forEach((f, i) => {
+    const t = document.createElement("div"); t.className = "thumb";
+    const img = document.createElement("img"); img.src = URL.createObjectURL(f); img.alt = f.name;
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.title = "Șterge";
+    x.onclick = () => { files.splice(i, 1); renderThumbs(); };
+    t.append(img, x); box.append(t);
+  });
+}
+function addFiles(list) {
+  const imgs = Array.from(list).filter((f) => f.type.startsWith("image/"));
+  files = files.concat(imgs).slice(0, MAX_FILES);
+  renderThumbs();
+}
+$("files").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+const drop = $("drop");
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
+
+// ---- Generate ---------------------------------------------------------------
+$("go").addEventListener("click", async () => {
+  show($("formErr"), "");
+  const url = $("url").value.trim();
+  if (!files.length && !url) { show($("formErr"), "Adaugă poze sau un link de produs."); return; }
+  const fd = new FormData();
+  if (url) fd.append("url", url);
+  files.forEach((f) => fd.append("images", f));
+  fd.append("language", $("lang").value);
+  fd.append("n_variants", $("n").value);
+  $("go").disabled = true;
+  try {
+    const res = await fetch("/api/video/jobs", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Cererea a eșuat.");
+    startPolling(data.id);
+  } catch (e) {
+    show($("formErr"), e.message);
+    $("go").disabled = false;
+  }
+});
+
+function startPolling(id) {
+  location.hash = "job=" + id;
+  $("form").hidden = true;
+  $("results").textContent = "";
+  $("progress").hidden = false;
+  $("again").hidden = true;
+  show($("jobErr"), "");
+  $("progressNote").hidden = false;
+  clearInterval(timer);
+  const tick = async () => {
+    try {
+      const job = await (await fetch("/api/video/jobs/" + id)).json();
+      $("stepText").textContent = job.status === "done" ? "Gata!" : stepLabel(job.step || "");
+      $("barFill").style.width = Math.round((job.progress || 0) * 100) + "%";
+      if (job.status === "done") { clearInterval(timer); $("progress").hidden = true; renderResults(job); }
+      if (job.status === "failed") {
+        clearInterval(timer);
+        $("stepText").textContent = "Nu a mers";
+        $("progressNote").hidden = true;
+        show($("jobErr"), job.error || "Eroare necunoscută.");
+        $("again").hidden = false;
+      }
+    } catch { /* retry on the next tick */ }
+  };
+  tick(); timer = setInterval(tick, 2000);
+}
+$("again").addEventListener("click", () => { history.replaceState(null, "", location.pathname); $("progress").hidden = true; $("form").hidden = false; $("go").disabled = false; });
+
+// ---- Results + publish --------------------------------------------------------
+function renderResults(job) {
+  const box = $("results");
+  box.textContent = "";
+  job.variants.filter((v) => v.status === "done").forEach((v, i) => {
+    const card = document.createElement("section"); card.className = "card";
+
+    const angle = document.createElement("div"); angle.className = "angle";
+    angle.textContent = "Varianta " + (i + 1) + " · " + v.script.angle;
+
+    const watch = document.createElement("a"); watch.className = "watch";
+    watch.href = v.video_url; watch.target = "_blank"; watch.rel = "noopener";
+    watch.textContent = "▶ Vezi videoclipul";
+
+    const video = document.createElement("video");
+    video.src = v.video_url; video.controls = true; video.playsInline = true; video.preload = "metadata";
+
+    const cap = document.createElement("p"); cap.className = "caption";
+    cap.textContent = v.script.caption + " " + v.script.hashtags.map((h) => "#" + h).join(" ");
+
+    const post = document.createElement("button"); post.className = "primary"; post.textContent = "Postează pe TikTok";
+    const status = document.createElement("p"); status.className = "msg"; status.hidden = true;
+    const setStatus = (text, kind) => { status.textContent = text; status.className = "msg " + kind; status.hidden = !text; };
+    if (!tiktok.connected) { post.disabled = true; setStatus("Conectează contul TikTok (sus) ca să poți posta.", "muted"); }
+
+    const actions = document.createElement("div"); actions.className = "actions";
+    const draft = document.createElement("button"); draft.className = "link"; draft.textContent = "Trimite în drafturi";
+    const dl = document.createElement("a"); dl.href = v.video_url; dl.download = "tiktok-" + v.id + ".mp4"; dl.textContent = "Descarcă";
+    dl.style.cssText = "font-size:13px;color:var(--muted)";
+    actions.append(draft, dl);
+
+    post.onclick = () => publish(job.id, v.id, "direct", [post, draft], setStatus);
+    draft.onclick = () => publish(job.id, v.id, "draft", [post, draft], setStatus);
+
+    card.append(angle, watch, video, cap, post, status, actions);
+    box.append(card);
+  });
+  const again = document.createElement("button"); again.className = "link"; again.textContent = "Generează alt videoclip";
+  again.onclick = () => { history.replaceState(null, "", location.pathname); box.textContent = ""; $("form").hidden = false; $("go").disabled = false; };
+  box.append(again);
+}
+
+async function publish(jobId, variantId, mode, buttons, setStatus) {
+  buttons.forEach((b) => (b.disabled = true));
+  setStatus("Se trimite către TikTok…", "muted");
+  try {
+    const res = await fetch("/api/video/jobs/" + jobId + "/publish", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ variant_id: variantId, mode }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Postarea a eșuat.");
+    await waitForPublish(data, mode, setStatus);
+  } catch (e) {
+    setStatus(e.message, "err");
+    buttons.forEach((b) => (b.disabled = false));
+  }
+}
+
+async function waitForPublish(result, mode, setStatus) {
+  for (let i = 0; i < 60; i++) {
+    let st = {};
+    try { st = await (await fetch("/api/video/publish/" + result.publish_id)).json(); } catch {}
+    const s = st.status || "";
+    if (s === "PUBLISH_COMPLETE") {
+      const priv = result.privacy_level === "SELF_ONLY" ? " (privat: doar contul tău îl vede)" : "";
+      return setStatus("✓ Postat pe TikTok" + priv, "ok");
+    }
+    if (s === "SEND_TO_USER_INBOX") return setStatus("✓ Trimis în drafturi. Deschide TikTok pe telefon ca să-l postezi.", "ok");
+    if (s === "FAILED") throw new Error("TikTok a refuzat videoclipul: " + (st.fail_reason || "motiv necunoscut"));
+    setStatus("TikTok procesează videoclipul…", "muted");
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  setStatus("TikTok încă procesează. Verifică în aplicația TikTok peste câteva minute.", "muted");
+}
+
+// ---- Start --------------------------------------------------------------------
+loadTikTok().then(() => {
+  const m = location.hash.match(/job=([a-z0-9]+)/);
+  if (m) startPolling(m[1]);
+});
+</script>
+</body>
+</html>
