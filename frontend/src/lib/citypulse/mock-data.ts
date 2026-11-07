@@ -23,6 +23,7 @@ export const BUSINESS_CATEGORIES: BusinessCategory[] = [
   'Florist',
   'Gym',
   'Supplements',
+  'Hardware',
 ]
 
 type BaseCity = Omit<CityResult, 'score' | 'action' | 'costUsd' | 'minutesSaved'>
@@ -249,6 +250,7 @@ export const MASTER_COPY: Record<BusinessCategory, { headline: string; body: str
   Florist: { headline: 'Flori proaspete pentru fiecare zi.', body: 'Buchete facute de mana, livrate azi.', cta: 'Comanda buchet' },
   Gym: { headline: 'Mai puternic in fiecare zi.', body: 'Antrenamente pentru orice program.', cta: 'Rezerva o sedinta' },
   Supplements: { headline: 'Energie pentru ritmul tau.', body: 'Formule simple, ingrediente clare.', cta: 'Descopera' },
+  Hardware: { headline: 'Unelte de calitate pentru orice proiect.', body: 'Tot ce iti trebuie pentru casa si gradina.', cta: 'Vezi catalog' },
 }
 
 export const SAMPLE_BRAND_SWATCHES = ['#8FDCC8', '#1F3A5F', '#F6E7CF', '#FF8B6B']
