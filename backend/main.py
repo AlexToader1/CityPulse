@@ -22,6 +22,7 @@ from backend.routes.export import router as export_router
 from backend.routes.generate import router as generate_router
 from backend.routes.heatmap import router as heatmap_router
 from backend.routes.status import router as status_router
+from backend.routes.studio import router as studio_router
 from backend.routes.tiktok import router as tiktok_router
 from backend.routes.video import router as video_router
 
@@ -57,6 +58,7 @@ for router in (
 # TikTok feature: these routers already carry their own /api/... prefix.
 app.include_router(video_router)   # /api/video/jobs ...  link/images -> TikTok videos
 app.include_router(tiktok_router)  # /api/tiktok/login, /callback, /status
+app.include_router(studio_router)  # /studio  simple page: photos -> video -> post
 
 # Generated videos and frames, served from STORAGE_DIR
 app.mount("/media", StaticFiles(directory=config.STORAGE_DIR), name="media")

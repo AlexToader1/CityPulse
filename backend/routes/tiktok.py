@@ -31,12 +31,12 @@ def login():
 @router.get("/callback")
 def callback(code: str | None = None, state: str = "", error: str | None = None, error_description: str = ""):
     if error or not code:
-        return RedirectResponse(f"{config.FRONTEND_URL}?tiktok=error&reason={error or 'no_code'}")
+        return RedirectResponse(f"{config.TIKTOK_AFTER_LOGIN_URL}?tiktok=error&reason={error or 'no_code'}")
     try:
         tiktok.exchange_code(code, state)
     except tiktok.TikTokError as exc:
         raise HTTPException(400, str(exc))
-    return RedirectResponse(f"{config.FRONTEND_URL}?tiktok=connected")
+    return RedirectResponse(f"{config.TIKTOK_AFTER_LOGIN_URL}?tiktok=connected")
 
 
 @router.post("/disconnect")

@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from backend import config
+from backend.services import product as product_service
 from backend.services import tiktok
 from backend.video import jobs
 from backend.video.models import Product, PublishResult, VideoJob
@@ -51,6 +52,24 @@ async def create_job(
     jobs.save(job)
     jobs.submit(job.id)
     return job
+
+
+@router.post("/staged-images", status_code=201)
+async def stage_image(image: UploadFile = File(..., description="Image to pre-load into the /studio page")):
+    """Stores an image sent by another page (e.g. the ad from the main app) so /studio can open
+    with it already added: /studio?staged=<id>."""
+    data = await image.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "Image is larger than 15 MB")
+    staged_id = jobs.new_job_id()
+    dest = config.STORAGE_DIR / "staged" / f"{staged_id}.jpg"
+    try:
+        saved = product_service.normalize_image(data, dest)
+    except Exception:
+        raise HTTPException(400, "Not a valid image")
+    if not saved:
+        raise HTTPException(400, "Image is too small (minimum 300 px on the shorter side)")
+    return {"id": staged_id, "url": f"/media/staged/{staged_id}.jpg"}
 
 
 @router.get("/jobs", response_model=list[VideoJob])

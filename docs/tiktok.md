@@ -8,11 +8,12 @@ word-by-word captions (ffmpeg) → preview → approve → post to TikTok.
 
 ```bash
 uv venv --python 3.12 .venv            # or: python3.12 -m venv .venv
-uv pip install -r backend/requirements.txt   # or: .venv/bin/pip install -r backend/requirements.txt
+uv pip install -r requirements.txt     # (backend/requirements.txt lists the TikTok-specific ones)
 cp .env.example .env                   # then fill in the keys
 .venv/bin/uvicorn backend.main:app --reload   # run from the repo root
 ```
 
+- Simple page (photos -> video -> post): http://localhost:8000/studio
 - API docs to try every endpoint: http://localhost:8000/docs
 - Frontend component: `frontend/src/components/VideoPreview.tsx` (calls `frontend/src/api/client.ts`)
 - No system ffmpeg needed (a bundled binary is used); `brew install ffmpeg` also works.

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityPulse TikTok Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  /* Same palette and neo-brutalist rules as the CityPulse frontend (frontend/src/app/globals.css). */
+  :root {
+    --cream: #faf5ee; --white: #fff; --ink: #111; --yellow: #ffe14d; --lime: #b8f24a; --pink: #ff5fa8;
+    --sky: #3da5ff; --orange: #ffb066; --lavender: #c9b6ff; --mint: #dcebdd; --grey: #b8b8b8;
+    --radius: .875rem; --shadow: 4px 4px 0 0 var(--ink); --shadow-sm: 2px 2px 0 0 var(--ink);
+    --sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Space Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; border-color: var(--ink); }
+  html { font-size: 18px; background: var(--cream); }
+  body { margin: 0; background: var(--cream); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; box-shadow: 0 0 0 6px var(--yellow); border-radius: 6px; }
+  main { max-width: 1240px; margin: 0 auto; padding: 16px 16px 56px; }
+  [hidden] { display: none !important; }
+
+  .mono { font-family: var(--mono); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .pill { display: inline-flex; align-items: center; gap: .4rem; border: 2px solid var(--ink); border-radius: 999px; padding: .2rem .75rem; font-size: .8rem; font-weight: 700; color: var(--ink); background: var(--white); text-decoration: none; }
+  .card { background: var(--white); border: 2px solid var(--ink); border-radius: 1.2rem; box-shadow: var(--shadow); overflow: hidden; }
+  .card-head { padding: 1rem 1.3rem .9rem; border-bottom: 2px solid var(--ink); }
+  .card-head h2 { margin: .15rem 0 0; font-size: 1.55rem; line-height: 1.15; }
+  .card-head p { margin: .3rem 0 0; font-size: .85rem; color: #3a3a3a; }
+  .card-body { padding: 1.1rem 1.3rem 1.3rem; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border: 2px solid var(--ink); border-radius: var(--radius); padding: .6rem 1.2rem; font: 700 .95rem var(--sans); color: var(--ink); background: var(--white); box-shadow: var(--shadow); cursor: pointer; text-decoration: none; transition: transform .15s ease-out; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.primary { background: var(--yellow); }
+  .btn.block { width: 100%; }
+  .linkbtn { background: none; border: 0; padding: 0; font: 700 .8rem var(--sans); color: var(--ink); text-decoration: underline; cursor: pointer; }
+
+  /* top bar */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin: 4px 0 14px; }
+  .brand { display: flex; align-items: center; gap: .6rem; }
+  .logo { background: var(--yellow); box-shadow: var(--shadow-sm); font-size: 1rem; padding: .25rem .8rem; }
+  .logo svg { width: 1rem; height: 1rem; }
+
+  /* stat tiles */
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin: 0 0 1rem; }
+  @media (min-width: 760px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+  .stat { border: 2px solid var(--ink); border-radius: 1.2rem; padding: .7rem 1rem; box-shadow: var(--shadow-sm); }
+  .stat dt { margin: 0; } .stat dd { margin: .25rem 0 0; font: 700 1.6rem var(--mono); font-variant-numeric: tabular-nums; }
+
+  .layout { display: grid; gap: 1rem; align-items: start; }
+  @media (min-width: 940px) { .layout { grid-template-columns: 1.25fr 1fr; } }
+
+  /* form */
+  .drop { position: relative; display: block; border: 2px solid var(--ink); border-radius: var(--radius); padding: 2.1rem 1rem; text-align: center; cursor: pointer;
+          background-color: var(--cream);
+          background-image: linear-gradient(var(--mint) 1px, transparent 1px), linear-gradient(90deg, var(--mint) 1px, transparent 1px); background-size: 26px 26px; }
+  .drop.over { background-color: var(--yellow); }
+  .drop input { display: none; }
+  .drop strong { font-size: 1.1rem; display: block; }
+  .drop span { font-size: .85rem; color: #3a3a3a; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .9rem; }
+  .thumb { position: relative; width: 84px; height: 84px; border: 2px solid var(--ink); border-radius: .8rem; box-shadow: var(--shadow-sm); overflow: visible; background: var(--white); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: .65rem; }
+  .thumb button { position: absolute; top: -9px; right: -9px; width: 24px; height: 24px; border: 2px solid var(--ink); border-radius: 50%; background: var(--pink); color: var(--ink); font: 700 .8rem var(--sans); cursor: pointer; line-height: 1; padding: 0; }
+  .divider { text-align: center; margin: 1.1rem 0 .9rem; }
+  label.field { display: block; margin: 0 0 .35rem; }
+  input[type=text] { width: 100%; padding: .65rem .8rem; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--white); color: var(--ink); font: 500 .95rem var(--sans); }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-top: 1rem; }
+  .seg { display: flex; gap: 2px; border: 2px solid var(--ink); border-radius: 999px; padding: 3px; background: var(--cream); }
+  .seg button { flex: 1; border: 2px solid transparent; border-radius: 999px; background: transparent; padding: .3rem .4rem; font: 700 .9rem var(--sans); color: var(--ink); cursor: pointer; }
+  .seg button[aria-pressed=true] { background: var(--white); border-color: var(--ink); }
+  .seg:has(button:disabled) { opacity: .6; }
+  #go { margin-top: 1.2rem; font-size: 1.05rem; padding: .8rem 1.2rem; }
+
+  /* notes / status */
+  .note { border: 2px solid var(--ink); border-radius: .8rem; padding: .5rem .8rem; font-size: .85rem; font-weight: 700; margin-top: .8rem; background: var(--white); }
+  .note.err { background: var(--pink); } .note.ok { background: var(--lime); } .note.muted { background: var(--cream); font-weight: 500; }
+
+  /* right panel */
+  .empty { border: 2px dashed var(--ink); border-radius: var(--radius); padding: 2.4rem 1rem; text-align: center; background: var(--cream); }
+  .empty svg { width: 52px; height: 52px; margin-bottom: .5rem; }
+  .empty strong { display: block; font-size: 1.1rem; }
+  .bar { height: 20px; border: 2px solid var(--ink); border-radius: 999px; background: var(--white); overflow: hidden; margin-top: .7rem; }
+  .bar > div { height: 100%; width: 0; background: var(--pink); border-right: 2px solid var(--ink); transition: width .4s; }
+  .variant { border: 2px solid var(--ink); border-radius: var(--radius); padding: .9rem; background: var(--white); margin-bottom: 1rem; }
+  .variant:last-child { margin-bottom: 0; }
+  .vhead { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .7rem; flex-wrap: wrap; }
+  .frame { border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; background: #000; }
+  .frame video { display: block; width: 100%; max-height: 540px; background: #000; }
+  .caption { margin: .8rem 0 .4rem; font-size: .95rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .9rem; }
+  .tags .pill { background: var(--lavender); font-size: .72rem; padding: .1rem .55rem; }
+  .vbtns { display: grid; gap: .7rem; }
+  .vlinks { display: flex; justify-content: space-between; margin-top: .8rem; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div class="brand">
+      <span class="pill logo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5l2.6 7.1 7.4.3-5.8 4.6 2 7.2L12 16.6l-6.2 4.1 2-7.2L2 8.9l7.4-.3z" fill="#111"/></svg>
+        CityPulse
+      </span>
+      <span class="mono">TikTok Studio</span>
+    </div>
+    <div id="tt" class="pill">Se verifică TikTok…</div>
+  </header>
+
+  <dl class="stats" aria-label="Rezumat">
+    <div class="stat" style="background:var(--pink)"><dt class="mono">Poze adăugate</dt><dd id="sPhotos">0</dd></div>
+    <div class="stat" style="background:var(--grey)"><dt class="mono">Videoclipuri gata</dt><dd id="sVideos">0</dd></div>
+    <div class="stat" style="background:var(--sky)"><dt class="mono">Cost estimat</dt><dd id="sCost">$0.00</dd></div>
+    <div class="stat" style="background:var(--lime)"><dt class="mono">Timp economisit (est.)</dt><dd id="sTime">0.0 h</dd></div>
+  </dl>
+
+  <div class="layout">
+    <section class="card" aria-labelledby="formTitle">
+      <div class="card-head">
+        <div class="mono">Pasul 1</div>
+        <h2 id="formTitle">Pozele produsului</h2>
+        <p>Adaugă 2–6 poze, sau lipește un link de produs. Restul îl face aplicația.</p>
+      </div>
+      <div class="card-body">
+        <label class="drop" id="drop">
+          <input type="file" id="files" accept="image/*" multiple>
+          <strong>Alege pozele</strong>
+          <span>sau trage-le aici</span>
+        </label>
+        <div class="thumbs" id="thumbs"></div>
+        <div class="note ok" id="stagedNote" hidden>Poza din reclamă a fost adăugată.</div>
+
+        <div class="divider mono">sau</div>
+        <label class="field mono" for="url">Link de produs (opțional)</label>
+        <input type="text" id="url" placeholder="https://…">
+
+        <div class="opts">
+          <div>
+            <div class="field mono">Limba</div>
+            <div class="seg" id="langSeg">
+              <button type="button" data-v="ro" aria-pressed="true">Română</button>
+              <button type="button" data-v="en" aria-pressed="false">English</button>
+            </div>
+          </div>
+          <div>
+            <div class="field mono">Variante</div>
+            <div class="seg" id="nSeg">
+              <button type="button" data-v="1" aria-pressed="true">1</button>
+              <button type="button" data-v="2" aria-pressed="false">2</button>
+              <button type="button" data-v="3" aria-pressed="false">3</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn primary block" id="go">Generează videoclip</button>
+        <div class="note err" id="formErr" hidden></div>
+      </div>
+    </section>
+
+    <aside class="card" aria-labelledby="panelTitle">
+      <div class="card-head">
+        <div class="mono">Pasul 2</div>
+        <h2 id="panelTitle">Videoclipul tău</h2>
+      </div>
+      <div class="card-body">
+        <div class="empty" id="empty">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="#ffe14d" stroke="#111" stroke-width="2" stroke-linejoin="round"/></svg>
+          <strong>Aici apare videoclipul</strong>
+          <span class="mono">Adaugă pozele și apasă Generează</span>
+        </div>
+        <div id="progress" hidden>
+          <strong id="stepText">Pornesc…</strong>
+          <div class="bar"><div id="barFill"></div></div>
+          <div class="note muted" id="progressNote">Durează de obicei sub un minut.</div>
+        </div>
+        <div class="note err" id="jobErr" hidden></div>
+        <div id="results"></div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+// Backend base URL. Empty = same origin; the server fills this in when it serves the page.
+const API = "__STUDIO_API__";
+const MAX_FILES = 6;
+const HOURS_SAVED_PER_VIDEO = 1.5; // rough estimate of manual filming + editing time, for the "Est." tile
+let files = [];
+let timer = null;
+let lang = "ro";
+let nVariants = 1;
+let tiktok = { configured: false, connected: false };
+
+const STEPS = [
+  ["Reading the product page", "Citesc pagina produsului…"],
+  ["Collecting product images", "Pregătesc pozele…"],
+  ["Claude is writing", "Scriu scenariul…"],
+  ["Preparing vertical", "Pregătesc imaginile verticale…"],
+  ["Recording voiceover", "Înregistrez vocea…"],
+  ["Rendering video", "Montez videoclipul…"],
+];
+const stepLabel = (s) => (STEPS.find(([k]) => s.startsWith(k)) || [0, s])[1];
+const show = (el, text) => { el.textContent = text; el.hidden = !text; };
+
+function setStats({ photos, videos, cost }) {
+  if (photos !== undefined) $("sPhotos").textContent = photos;
+  if (videos !== undefined) { $("sVideos").textContent = videos; $("sTime").textContent = (videos * HOURS_SAVED_PER_VIDEO).toFixed(1) + " h"; }
+  if (cost !== undefined) $("sCost").textContent = "$" + cost.toFixed(2);
+}
+
+// segmented controls
+function seg(id, onPick) {
+  const box = $(id);
+  box.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b || b.disabled) return;
+    box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    onPick(b.dataset.v);
+  });
+}
+seg("langSeg", (v) => (lang = v));
+seg("nSeg", (v) => (nVariants = Number(v)));
+const lockForm = (locked) => { $("go").disabled = locked; document.querySelectorAll(".seg button").forEach((b) => (b.disabled = locked)); };
+
+// ---- TikTok connection ----------------------------------------------------------
+async function loadTikTok() {
+  try { tiktok = await (await fetch(API + "/api/tiktok/status")).json(); }
+  catch { tiktok = { configured: false, connected: false }; }
+  const box = $("tt");
+  box.textContent = "";
+  if (!tiktok.configured) {
+    box.style.background = "var(--grey)"; box.textContent = "TikTok neconfigurat";
+  } else if (tiktok.connected) {
+    box.style.background = "var(--lime)";
+    box.textContent = "TikTok · conectat ca " + ((tiktok.user && tiktok.user.display_name) || "cont");
+  } else {
+    box.style.background = "var(--pink)";
+    const a = document.createElement("a");
+    a.href = API + "/api/tiktok/login"; a.textContent = "Conectează TikTok →"; a.style.color = "inherit";
+    box.append(a);
+  }
+}
+
+// ---- Photos ---------------------------------------------------------------------------
+function renderThumbs() {
+  const box = $("thumbs"); box.textContent = "";
+  files.forEach((f, i) => {
+    const t = document.createElement("div"); t.className = "thumb";
+    const img = document.createElement("img"); img.src = URL.createObjectURL(f); img.alt = f.name;
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.title = "Șterge"; x.setAttribute("aria-label", "Șterge poza");
+    x.onclick = () => { files.splice(i, 1); renderThumbs(); };
+    t.append(img, x); box.append(t);
+  });
+  setStats({ photos: files.length });
+}
+function addFiles(list) {
+  files = files.concat(Array.from(list).filter((f) => f.type.startsWith("image/"))).slice(0, MAX_FILES);
+  renderThumbs();
+}
+$("files").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+const drop = $("drop");
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
+
+// ---- Generate ---------------------------------------------------------------------------
+$("go").addEventListener("click", async () => {
+  show($("formErr"), "");
+  const url = $("url").value.trim();
+  if (!files.length && !url) { show($("formErr"), "Adaugă poze sau un link de produs."); return; }
+  const fd = new FormData();
+  if (url) fd.append("url", url);
+  files.forEach((f) => fd.append("images", f));
+  fd.append("language", lang);
+  fd.append("n_variants", String(nVariants));
+  lockForm(true);
+  try {
+    const res = await fetch(API + "/api/video/jobs", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Cererea a eșuat.");
+    startPolling(data.id);
+  } catch (e) { show($("formErr"), e.message); lockForm(false); }
+});
+
+function startPolling(id) {
+  location.hash = "job=" + id;
+  lockForm(true);
+  $("empty").hidden = true; $("results").textContent = ""; show($("jobErr"), "");
+  $("progress").hidden = false; $("progressNote").hidden = false; $("stepText").textContent = "Pornesc…"; $("barFill").style.width = "0";
+  clearInterval(timer);
+  const tick = async () => {
+    try {
+      const job = await (await fetch(API + "/api/video/jobs/" + id)).json();
+      $("stepText").textContent = job.status === "done" ? "Gata!" : stepLabel(job.step || "");
+      $("barFill").style.width = Math.round((job.progress || 0) * 100) + "%";
+      if (job.cost) setStats({ cost: job.cost.total_usd });
+      if (job.status === "done") { clearInterval(timer); $("progress").hidden = true; lockForm(false); renderResults(job); }
+      if (job.status === "failed") {
+        clearInterval(timer); lockForm(false);
+        $("stepText").textContent = "Nu a mers";
+        $("progressNote").hidden = true;
+        show($("jobErr"), job.error || "Eroare necunoscută.");
+      }
+    } catch { /* retry on the next tick */ }
+  };
+  tick(); timer = setInterval(tick, 2000);
+}
+
+// ---- Results + publish -----------------------------------------------------------------------
+function renderResults(job) {
+  const box = $("results"); box.textContent = "";
+  const done = job.variants.filter((v) => v.status === "done");
+  setStats({ videos: done.length, cost: job.cost ? job.cost.total_usd : undefined });
+  done.forEach((v, i) => {
+    const card = document.createElement("div"); card.className = "variant";
+
+    const head = document.createElement("div"); head.className = "vhead";
+    const lab = document.createElement("span"); lab.className = "mono"; lab.textContent = "Varianta " + (i + 1);
+    const angle = document.createElement("span"); angle.className = "pill"; angle.style.background = "var(--orange)"; angle.textContent = v.script.angle;
+    head.append(lab, angle);
+
+    const frame = document.createElement("div"); frame.className = "frame";
+    const video = document.createElement("video");
+    video.src = API + v.video_url + "#t=0.5"; /* shows a frame before play */ video.controls = true; video.playsInline = true; video.preload = "metadata";
+    frame.append(video);
+
+    const cap = document.createElement("p"); cap.className = "caption"; cap.textContent = v.script.caption;
+    const tags = document.createElement("div"); tags.className = "tags";
+    v.script.hashtags.forEach((h) => { const p = document.createElement("span"); p.className = "pill"; p.textContent = "#" + h; tags.append(p); });
+
+    const watch = document.createElement("a"); watch.className = "btn"; watch.href = API + v.video_url; watch.target = "_blank"; watch.rel = "noopener"; watch.textContent = "▶ Vezi videoclipul";
+    const post = document.createElement("button"); post.className = "btn primary"; post.textContent = "Postează pe TikTok";
+    const status = document.createElement("div"); status.className = "note"; status.hidden = true;
+    const setStatus = (text, kind) => { status.textContent = text; status.className = "note " + kind; status.hidden = !text; };
+    if (!tiktok.connected) { post.disabled = true; setStatus("Conectează contul TikTok (sus) ca să poți posta.", "muted"); }
+    const btns = document.createElement("div"); btns.className = "vbtns"; btns.append(watch, post);
+
+    const links = document.createElement("div"); links.className = "vlinks";
+    const draft = document.createElement("button"); draft.className = "linkbtn"; draft.textContent = "Trimite în drafturi";
+    const dl = document.createElement("a"); dl.className = "linkbtn"; dl.href = API + v.video_url; dl.download = "tiktok-" + v.id + ".mp4"; dl.textContent = "Descarcă";
+    links.append(draft, dl);
+
+    post.onclick = () => publish(job.id, v.id, "direct", [post, draft], setStatus);
+    draft.onclick = () => publish(job.id, v.id, "draft", [post, draft], setStatus);
+
+    card.append(head, frame, cap, tags, btns, status, links);
+    box.append(card);
+  });
+}
+
+async function publish(jobId, variantId, mode, buttons, setStatus) {
+  buttons.forEach((b) => (b.disabled = true));
+  setStatus("Se trimite către TikTok…", "muted");
+  try {
+    const res = await fetch(API + "/api/video/jobs/" + jobId + "/publish", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ variant_id: variantId, mode }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Postarea a eșuat.");
+    await waitForPublish(data, setStatus);
+  } catch (e) { setStatus(e.message, "err"); buttons.forEach((b) => (b.disabled = false)); }
+}
+
+async function waitForPublish(result, setStatus) {
+  for (let i = 0; i < 60; i++) {
+    let st = {};
+    try { st = await (await fetch(API + "/api/video/publish/" + result.publish_id)).json(); } catch {}
+    const s = st.status || "";
+    if (s === "PUBLISH_COMPLETE") return setStatus("✓ Postat pe TikTok" + (result.privacy_level === "SELF_ONLY" ? " (privat: doar contul tău îl vede)" : ""), "ok");
+    if (s === "SEND_TO_USER_INBOX") return setStatus("✓ Trimis în drafturi. Deschide TikTok pe telefon ca să-l postezi.", "ok");
+    if (s === "FAILED") throw new Error("TikTok a refuzat videoclipul: " + (st.fail_reason || "motiv necunoscut"));
+    setStatus("TikTok procesează videoclipul…", "muted");
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  setStatus("TikTok încă procesează. Verifică în aplicația TikTok peste câteva minute.", "muted");
+}
+
+// Images sent from the main app arrive as /studio?staged=<id>[,<id>]
+async function loadStaged() {
+  const q = new URLSearchParams(location.search);
+  const ids = (q.get("staged") || "").split(",").filter((x) => /^[a-f0-9]{6,32}$/.test(x));
+  if (!ids.length) return;
+  let added = 0;
+  for (const id of ids) {
+    try {
+      const res = await fetch(API + "/media/staged/" + id + ".jpg");
+      if (!res.ok) continue;
+      files.push(new File([await res.blob()], "reclama-" + id + ".jpg", { type: "image/jpeg" }));
+      added++;
+    } catch { /* skip this one */ }
+  }
+  files = files.slice(0, MAX_FILES);
+  renderThumbs();
+  $("stagedNote").hidden = !added;
+  q.delete("staged");
+  history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+}
+
+// ---- Start -------------------------------------------------------------------------------------
+loadStaged();
+loadTikTok().then(() => {
+  const m = location.hash.match(/job=([a-z0-9]+)/);
+  if (m) startPolling(m[1]);
+});
+</script>
+</body>
+</html>

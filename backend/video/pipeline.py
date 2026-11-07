@@ -79,6 +79,9 @@ def _run(job: VideoJob) -> None:
     cost.add("Claude script (input tokens)", usage["input_tokens"], "claude_input_token")
     cost.add("Claude script (output tokens)", usage["output_tokens"], "claude_output_token")
     job.product_summary = script_set.product_summary
+    if not script_set.variants:
+        # Claude declined (e.g. the images aren't a sellable product): show its reason, not a generic error.
+        raise RuntimeError(f"Claude did not write any scripts. {script_set.product_summary}")
     job.variants = [Variant(id=f"v{i + 1}", script=s) for i, s in enumerate(script_set.variants)]
 
     # 3. Visuals: 9:16 frames for every image a script uses -------------------------

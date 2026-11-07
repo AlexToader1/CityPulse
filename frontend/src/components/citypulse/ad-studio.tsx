@@ -1,10 +1,11 @@
 'use client'
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Check, ChevronDown, Download, Pencil, RefreshCw } from 'lucide-react'
+import { Check, ChevronDown, Download, Pencil, RefreshCw, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { checkCompliance, exportAd, generateAd } from '@/lib/citypulse/api'
 import { THRESHOLDS } from '@/lib/citypulse/config'
+import { openTikTokStudio } from '@/lib/citypulse/tiktok'
 import type { BrandDNA, CityResult, Compliance, ExportFormat, GeneratedAd } from '@/lib/citypulse/types'
 import { cn } from '@/lib/utils'
 import { AdPreview } from './ad-preview'
@@ -40,6 +41,7 @@ export function AdStudio({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState({ headline: '', body: '' })
   const [exportOpen, setExportOpen] = useState(false)
+  const [posting, setPosting] = useState(false)
   const cache = useRef(new Map<string, Done>())
   const runId = useRef(0)
   const exportRef = useRef<HTMLDivElement>(null)
@@ -114,6 +116,13 @@ export function AdStudio({
     setState({ kind: 'done', result })
     setEditing(false)
     toast(res.data.status === 'blocked' ? 'Still held back. Check the note.' : 'Copy saved and checked.', res.data.status === 'blocked' ? 'pink' : 'lime')
+  }
+
+  async function post() {
+    setPosting(true)
+    const attached = await openTikTokStudio(brand.imageUrl)
+    setPosting(false)
+    if (!attached) toast('TikTok page opened, but the image could not be attached.', 'pink')
   }
 
   async function doExport(format: ExportFormat) {
@@ -254,6 +263,15 @@ export function AdStudio({
                     <p className="mt-1">{result.compliance.note}</p>
                   </motion.div>
                 </AnimatePresence>
+
+                <button
+                  type="button"
+                  className="nb-btn-primary w-full px-4 py-2 text-base"
+                  disabled={result.compliance.status === 'blocked' || posting}
+                  onClick={post}
+                >
+                  <Send className="size-4" aria-hidden="true" /> {posting ? 'Opening…' : 'Post'}
+                </button>
 
                 {editing ? (
                   <form
