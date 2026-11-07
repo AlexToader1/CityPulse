@@ -132,6 +132,7 @@
           <span>sau trage-le aici</span>
         </label>
         <div class="thumbs" id="thumbs"></div>
+        <div class="note ok" id="stagedNote" hidden>Poza din reclamă a fost adăugată.</div>
 
         <div class="divider mono">sau</div>
         <label class="field mono" for="url">Link de produs (opțional)</label>
@@ -185,6 +186,8 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
+// Backend base URL. Empty = same origin; the server fills this in when it serves the page.
+const API = "__STUDIO_API__";
 const MAX_FILES = 6;
 const HOURS_SAVED_PER_VIDEO = 1.5; // rough estimate of manual filming + editing time, for the "Est." tile
 let files = [];
@@ -225,7 +228,7 @@ const lockForm = (locked) => { $("go").disabled = locked; document.querySelector
 
 // ---- TikTok connection ----------------------------------------------------------
 async function loadTikTok() {
-  try { tiktok = await (await fetch("/api/tiktok/status")).json(); }
+  try { tiktok = await (await fetch(API + "/api/tiktok/status")).json(); }
   catch { tiktok = { configured: false, connected: false }; }
   const box = $("tt");
   box.textContent = "";
@@ -237,7 +240,7 @@ async function loadTikTok() {
   } else {
     box.style.background = "var(--pink)";
     const a = document.createElement("a");
-    a.href = "/api/tiktok/login"; a.textContent = "Conectează TikTok →"; a.style.color = "inherit";
+    a.href = API + "/api/tiktok/login"; a.textContent = "Conectează TikTok →"; a.style.color = "inherit";
     box.append(a);
   }
 }
@@ -276,7 +279,7 @@ $("go").addEventListener("click", async () => {
   fd.append("n_variants", String(nVariants));
   lockForm(true);
   try {
-    const res = await fetch("/api/video/jobs", { method: "POST", body: fd });
+    const res = await fetch(API + "/api/video/jobs", { method: "POST", body: fd });
     const data = await res.json();
     if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Cererea a eșuat.");
     startPolling(data.id);
@@ -291,7 +294,7 @@ function startPolling(id) {
   clearInterval(timer);
   const tick = async () => {
     try {
-      const job = await (await fetch("/api/video/jobs/" + id)).json();
+      const job = await (await fetch(API + "/api/video/jobs/" + id)).json();
       $("stepText").textContent = job.status === "done" ? "Gata!" : stepLabel(job.step || "");
       $("barFill").style.width = Math.round((job.progress || 0) * 100) + "%";
       if (job.cost) setStats({ cost: job.cost.total_usd });
@@ -322,14 +325,14 @@ function renderResults(job) {
 
     const frame = document.createElement("div"); frame.className = "frame";
     const video = document.createElement("video");
-    video.src = v.video_url + "#t=0.5"; /* shows a frame before play */ video.controls = true; video.playsInline = true; video.preload = "metadata";
+    video.src = API + v.video_url + "#t=0.5"; /* shows a frame before play */ video.controls = true; video.playsInline = true; video.preload = "metadata";
     frame.append(video);
 
     const cap = document.createElement("p"); cap.className = "caption"; cap.textContent = v.script.caption;
     const tags = document.createElement("div"); tags.className = "tags";
     v.script.hashtags.forEach((h) => { const p = document.createElement("span"); p.className = "pill"; p.textContent = "#" + h; tags.append(p); });
 
-    const watch = document.createElement("a"); watch.className = "btn"; watch.href = v.video_url; watch.target = "_blank"; watch.rel = "noopener"; watch.textContent = "▶ Vezi videoclipul";
+    const watch = document.createElement("a"); watch.className = "btn"; watch.href = API + v.video_url; watch.target = "_blank"; watch.rel = "noopener"; watch.textContent = "▶ Vezi videoclipul";
     const post = document.createElement("button"); post.className = "btn primary"; post.textContent = "Postează pe TikTok";
     const status = document.createElement("div"); status.className = "note"; status.hidden = true;
     const setStatus = (text, kind) => { status.textContent = text; status.className = "note " + kind; status.hidden = !text; };
@@ -338,7 +341,7 @@ function renderResults(job) {
 
     const links = document.createElement("div"); links.className = "vlinks";
     const draft = document.createElement("button"); draft.className = "linkbtn"; draft.textContent = "Trimite în drafturi";
-    const dl = document.createElement("a"); dl.className = "linkbtn"; dl.href = v.video_url; dl.download = "tiktok-" + v.id + ".mp4"; dl.textContent = "Descarcă";
+    const dl = document.createElement("a"); dl.className = "linkbtn"; dl.href = API + v.video_url; dl.download = "tiktok-" + v.id + ".mp4"; dl.textContent = "Descarcă";
     links.append(draft, dl);
 
     post.onclick = () => publish(job.id, v.id, "direct", [post, draft], setStatus);
@@ -353,7 +356,7 @@ async function publish(jobId, variantId, mode, buttons, setStatus) {
   buttons.forEach((b) => (b.disabled = true));
   setStatus("Se trimite către TikTok…", "muted");
   try {
-    const res = await fetch("/api/video/jobs/" + jobId + "/publish", {
+    const res = await fetch(API + "/api/video/jobs/" + jobId + "/publish", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ variant_id: variantId, mode }),
     });
@@ -366,7 +369,7 @@ async function publish(jobId, variantId, mode, buttons, setStatus) {
 async function waitForPublish(result, setStatus) {
   for (let i = 0; i < 60; i++) {
     let st = {};
-    try { st = await (await fetch("/api/video/publish/" + result.publish_id)).json(); } catch {}
+    try { st = await (await fetch(API + "/api/video/publish/" + result.publish_id)).json(); } catch {}
     const s = st.status || "";
     if (s === "PUBLISH_COMPLETE") return setStatus("✓ Postat pe TikTok" + (result.privacy_level === "SELF_ONLY" ? " (privat: doar contul tău îl vede)" : ""), "ok");
     if (s === "SEND_TO_USER_INBOX") return setStatus("✓ Trimis în drafturi. Deschide TikTok pe telefon ca să-l postezi.", "ok");
@@ -377,7 +380,29 @@ async function waitForPublish(result, setStatus) {
   setStatus("TikTok încă procesează. Verifică în aplicația TikTok peste câteva minute.", "muted");
 }
 
+// Images sent from the main app arrive as /studio?staged=<id>[,<id>]
+async function loadStaged() {
+  const q = new URLSearchParams(location.search);
+  const ids = (q.get("staged") || "").split(",").filter((x) => /^[a-f0-9]{6,32}$/.test(x));
+  if (!ids.length) return;
+  let added = 0;
+  for (const id of ids) {
+    try {
+      const res = await fetch(API + "/media/staged/" + id + ".jpg");
+      if (!res.ok) continue;
+      files.push(new File([await res.blob()], "reclama-" + id + ".jpg", { type: "image/jpeg" }));
+      added++;
+    } catch { /* skip this one */ }
+  }
+  files = files.slice(0, MAX_FILES);
+  renderThumbs();
+  $("stagedNote").hidden = !added;
+  q.delete("staged");
+  history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+}
+
 // ---- Start -------------------------------------------------------------------------------------
+loadStaged();
 loadTikTok().then(() => {
   const m = location.hash.match(/job=([a-z0-9]+)/);
   if (m) startPolling(m[1]);

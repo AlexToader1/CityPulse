@@ -27,6 +27,15 @@ export const MOCK_FAILURE_RATE = 0
 /** Backend base URL (e.g. http://localhost:8000/api). Set to an empty string to use the built-in mock data. */
 export const API_BASE_URL = process.env.NEXT_PUBLIC_CITYPULSE_API_URL ?? ''
 
+/** Backend origin (e.g. http://localhost:8000): the API base URL without its /api suffix. */
+export const BACKEND_ORIGIN = (API_BASE_URL || 'http://localhost:8000/api').replace(/\/api\/?$/, '')
+
+/**
+ * The TikTok posting page, served by the backend at GET /studio (same port as the API).
+ * Override with NEXT_PUBLIC_TIKTOK_STUDIO_URL.
+ */
+export const TIKTOK_STUDIO_URL = process.env.NEXT_PUBLIC_TIKTOK_STUDIO_URL ?? `${BACKEND_ORIGIN}/studio`
+
 export function decide(score: number): CityAction {
   if (score >= THRESHOLDS.generate) return 'GENERATE'
   if (score >= THRESHOLDS.lightTouch) return 'LIGHT_TOUCH'
