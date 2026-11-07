@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "country": "RO",
+  "language": "ro",
+  "note": "Starter ruleset drafted for the CityPulse demo. It is NOT legal advice: have it reviewed against Romanian advertising law and the platform policies you publish on before production use.",
+  "forbidden": [
+    {
+      "id": "unprovable-superlative",
+      "message": "is a superlative claim we cannot prove",
+      "patterns": [
+        {"match": "cel mai bun"},
+        {"match": "cea mai buna"},
+        {"match": "cei mai buni"},
+        {"match": "cele mai bune"},
+        {"match": "numarul 1"},
+        {"match": "nr. 1"},
+        {"match": "nr 1"},
+        {"match": "numarul unu"}
+      ]
+    },
+    {
+      "id": "soft-superlative",
+      "message": "is an absolute claim we cannot prove",
+      "patterns": [
+        {"match": "perfecta", "replace": "buna"},
+        {"match": "perfecte", "replace": "bune"},
+        {"match": "perfecti", "replace": "buni"},
+        {"match": "perfect", "replace": "bun"}
+      ]
+    },
+    {
+      "id": "guarantee-claim",
+      "message": "is a guarantee we cannot prove",
+      "patterns": [
+        {"match": "garantat"},
+        {"match": "garantata"},
+        {"match": "garantate"},
+        {"match": "garantati"},
+        {"match": "100%"},
+        {"match": "fara risc"},
+        {"match": "rezultate sigure"}
+      ]
+    },
+    {
+      "id": "health-claim",
+      "message": "is a health claim that needs proof",
+      "patterns": [
+        {"match": "vindeca"},
+        {"match": "trateaza"},
+        {"match": "elimina durerea"},
+        {"match": "slabesti"},
+        {"match": "slabire rapida"},
+        {"match": "detoxifiere"},
+        {"match": "fara efecte secundare"},
+        {"match": "cura minune"}
+      ]
+    },
+    {
+      "id": "third-party-event-name",
+      "message": "is a third-party event name we do not have rights to use",
+      "patterns": [
+        {"match": "untold", "replace": "festival"},
+        {"match": "neversea", "replace": "festival"},
+        {"match": "electric castle", "replace": "festival"},
+        {"match": "beach please", "replace": "festival"}
+      ]
+    }
+  ],
+  "required_disclaimers": [
+    {
+      "id": "medicine-leaflet",
+      "categories": ["Pharmacy", "Supplements"],
+      "triggers": ["medicament", "tratament", "antibiotic", "fara reteta", "supliment"],
+      "disclaimer_contains": ["citeste prospectul", "consulta medicul", "consulta farmacistul"],
+      "message": "Add a notice such as \"Citeste prospectul sau cere sfatul medicului sau farmacistului.\""
+    }
+  ]
+}

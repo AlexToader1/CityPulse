@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import threading
 import time
+import unicodedata
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -65,12 +67,50 @@ def _city_record(city: str) -> dict[str, Any] | None:
     return next((c for c in cities if c["name"].casefold() == city.casefold()), None)
 
 
+_WEEKDAYS = {n: i for i, n in enumerate(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"])}
+
+
+def _resolve_demo_event(raw: dict[str, Any], today: date) -> dict[str, Any] | None:
+    """Re-date a demo event to the next occurrence of its weekday (today counts)."""
+    weekday = _WEEKDAYS.get(str(raw.get("next_weekday", "")).casefold())
+    if weekday is None:
+        return None
+    start = today + timedelta(days=(weekday - today.weekday()) % 7)
+    end = start + timedelta(days=max(int(raw.get("duration_days", 1)), 1) - 1)
+    event = {k: v for k, v in raw.items() if k not in ("next_weekday", "duration_days")}
+    return {**event, "start_date": start.isoformat(), "end_date": end.isoformat()}
+
+
 def _load_demo_events() -> list[dict[str, Any]]:
+    """Fixed-date curated events plus demo events re-dated relative to today."""
     path = ROOT / "data" / "ro_events.json"
     if not path.exists():
         return []
     with path.open(encoding="utf-8") as f:
-        return json.load(f).get("events", [])
+        payload = json.load(f)
+    today = date.today()
+    demo_on = os.getenv("CITYPULSE_DEMO_EVENTS", "0") == "1"
+    resolved = [_resolve_demo_event(e, today) for e in payload.get("demo_events", [])] if demo_on else []
+    return payload.get("events", []) + [e for e in resolved if e]
+
+
+_STOP_WORDS = {"the", "a", "de", "demo"}
+
+
+def _tokens(name: str) -> set[str]:
+    folded = "".join(c for c in unicodedata.normalize("NFKD", name) if not unicodedata.combining(c))
+    return {t for t in re.findall(r"[a-z0-9]+", folded.casefold()) if t not in _STOP_WORDS}
+
+
+def _same_event(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    """Same city, overlapping dates, and one name's words contained in the other's
+    ("Sibiu Christmas Market" vs "Sibiu Christmas Market Opening")."""
+    if a.get("city", "").casefold() != b.get("city", "").casefold():
+        return False
+    if a["start_date"] > b.get("end_date", b["start_date"]) or b["start_date"] > a.get("end_date", a["start_date"]):
+        return False
+    ta, tb = _tokens(a["name"]), _tokens(b["name"])
+    return bool(ta and tb) and (ta <= tb or tb <= ta)
 
 
 # ------------------------------------------------------------ Ticketmaster
@@ -164,12 +204,9 @@ def get_real_events(city: str, days: int = 7) -> dict[str, Any]:
     ]
     status_parts.append(f"curated: {len(curated)} events")
 
-    seen: set[tuple[str, str]] = set()
     merged: list[dict[str, Any]] = []
     for event in live + curated:  # live first, so it wins duplicates
-        ident = (event["name"].casefold(), event["start_date"])
-        if ident not in seen:
-            seen.add(ident)
+        if not any(_same_event(event, kept) for kept in merged):
             merged.append(event)
     merged.sort(key=lambda e: (-float(e.get("relevance", 0)), e["start_date"]))
 

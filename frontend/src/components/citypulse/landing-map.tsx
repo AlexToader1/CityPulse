@@ -1,37 +1,44 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { useMemo } from 'react'
 import useSWR from 'swr'
-import { fetchCities } from '@/lib/citypulse/api'
-import { baseCityResults } from '@/lib/citypulse/cities'
-import { API_BASE_URL } from '@/lib/citypulse/config'
+import { fetchCities, fetchCityList } from '@/lib/citypulse/api'
 import { chaikin, fitProjection, ROMANIA_OUTLINE } from '@/lib/citypulse/geo'
 import { heatVar } from '@/lib/citypulse/heat'
 import { ALL_CITIES } from '@/lib/citypulse/mock-data'
+import type { CityResult } from '@/lib/citypulse/types'
 import { DemoBadge, LiveBadge } from './primitives'
 
 const W = 600
 const H = 430
 
+/** Landing-page snapshot: every supported city, scored for a default category. */
+async function fetchLandingCities(): Promise<CityResult[]> {
+  const list = await fetchCityList()
+  const names = list.ok ? list.data.map((c) => c.name) : [...ALL_CITIES]
+  const res = await fetchCities({ cities: names, category: 'Cafe' })
+  return res.ok ? res.data : []
+}
+
 export function LandingMap() {
   const reduce = useReducedMotion()
-  // Real signals from the API; the mock cities only show while loading or if the API is unreachable.
-  const { data } = useSWR(API_BASE_URL ? ['landing-cities'] : null, () => fetchCities({ cities: [...ALL_CITIES], category: 'Cafe' }))
-  const live = data?.ok ? data.data : null
+  const { data: landingCities } = useSWR('landing-cities', fetchLandingCities, { revalidateOnFocus: false })
+  const live = Boolean(landingCities?.length)  // real data from the API (no mock fallback)
   const { outline, pins, ribbon } = useMemo(() => {
     const proj = fitProjection(W, H, 34)
     const ring = chaikin(ROMANIA_OUTLINE.map(proj.project), 3)
     const outline = 'M' + ring.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join('L') + 'Z'
-    const cities = live ?? baseCityResults([...ALL_CITIES])
+    const cities = landingCities ?? []
     const pins = cities.map((c) => {
       const [x, y] = proj.project([c.lon, c.lat])
       return { ...c, x, y }
     })
     const adapted = pins.filter((p) => p.action !== 'SKIP').sort((a, b) => b.score - a.score)
-    const ribbon = 'M' + adapted.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('L')
+    const ribbon = adapted.length ? 'M' + adapted.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('L') : ''
     return { outline, pins, ribbon }
-  }, [live])
+  }, [landingCities])
 
   return (
     <motion.figure

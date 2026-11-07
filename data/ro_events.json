@@ -2,6 +2,7 @@
   "source": "Curated CityPulse records, compiled from public news and organiser pages (see source_url). Ticketmaster has no Romanian events, so this list is maintained by hand.",
   "last_updated": "2026-11-07",
   "note": "confirmed=false means the dates are provisional or unofficial. No event is listed for Constanta: none was found for the period.",
+  "_comment": "'events' have fixed dates. 'demo_events' are re-dated at runtime to the next given weekday (today counts), so the demo never goes stale. 'demo_events' are only used when CITYPULSE_DEMO_EVENTS=1.",
   "events": [
     {
       "id": "bucharest-christmas-market-2026",
@@ -98,6 +99,78 @@
       "relevance": 0.9,
       "confirmed": true,
       "note": "Theme 'The Nutcracker'; dates per the city hall as quoted by Wall-Street.ro. An extension to January may be announced."
+    }
+  ],
+  "demo_events": [
+    {
+      "id": "bucharest-coffee-weekend-demo",
+      "name": "Bucharest Coffee Weekend (demo)",
+      "city": "Bucharest",
+      "category": "food",
+      "next_weekday": "saturday",
+      "duration_days": 2,
+      "source_url": "https://citypulse.local/demo-events",
+      "relevance": 0.8
+    },
+    {
+      "id": "cluj-student-weekend-demo",
+      "name": "Cluj Student Weekend (demo)",
+      "city": "Cluj-Napoca",
+      "category": "student",
+      "next_weekday": "friday",
+      "duration_days": 3,
+      "source_url": "https://citypulse.local/demo-events",
+      "relevance": 0.9
+    },
+    {
+      "id": "iasi-autumn-food-days-demo",
+      "name": "Iasi Autumn Food Days (demo)",
+      "city": "Iasi",
+      "category": "food",
+      "next_weekday": "friday",
+      "duration_days": 3,
+      "source_url": "https://citypulse.local/demo-events",
+      "relevance": 0.8
+    },
+    {
+      "id": "constanta-off-season-culture-demo",
+      "name": "Constanta Off-Season Culture Days (demo)",
+      "city": "Constanta",
+      "category": "culture",
+      "next_weekday": "friday",
+      "duration_days": 3,
+      "source_url": "https://citypulse.local/demo-events",
+      "relevance": 0.6
+    },
+    {
+      "id": "timisoara-design-weekend-demo",
+      "name": "Timisoara Design Weekend (demo)",
+      "city": "Timisoara",
+      "category": "culture",
+      "next_weekday": "saturday",
+      "duration_days": 2,
+      "source_url": "https://citypulse.local/demo-events",
+      "relevance": 0.7
+    },
+    {
+      "id": "brasov-mountain-weekend-demo",
+      "name": "Brasov Mountain Weekend (demo)",
+      "city": "Brasov",
+      "category": "travel",
+      "next_weekday": "saturday",
+      "duration_days": 2,
+      "source_url": "https://citypulse.local/demo-events",
+      "relevance": 0.8
+    },
+    {
+      "id": "craiova-winter-lights-demo",
+      "name": "Craiova Winter Lights (demo)",
+      "city": "Craiova",
+      "category": "seasonal",
+      "next_weekday": "saturday",
+      "duration_days": 2,
+      "source_url": "https://citypulse.local/demo-events",
+      "relevance": 0.8
     }
   ]
 }

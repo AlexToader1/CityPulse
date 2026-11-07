@@ -1,6 +1,7 @@
 'use client'
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { useState } from 'react'
 import type { BrandDNA, BusinessCategory } from '@/lib/citypulse/types'
 import { applyBrandPrimary } from './brand-reveal'
@@ -22,6 +23,7 @@ export function CityPulseApp() {
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <ToastProvider>
       <AnimatePresence mode="wait">
         <motion.div
@@ -46,5 +48,6 @@ export function CityPulseApp() {
         </motion.div>
       </AnimatePresence>
     </ToastProvider>
+    </MotionConfig>
   )
 }

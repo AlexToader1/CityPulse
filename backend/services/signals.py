@@ -33,8 +33,9 @@ ACTION_COST = {
     "LIGHT_TOUCH": (0.03, 20),
     "SKIP": (0.0, 0),
 }
-WINDOW_DAYS = 3        # weather + holidays
-EVENT_WINDOW_DAYS = 21  # events: ads need lead time (big markets are announced weeks ahead)
+WINDOW_DAYS = 3          # weather
+HOLIDAY_WINDOW_DAYS = 5  # holidays: a little lead time for greetings
+EVENT_WINDOW_DAYS = 21   # events: ads need lead time (big markets are announced weeks ahead)
 
 # ---------------------------------------------------------------- caches
 _cache: dict[str, tuple[float, Any]] = {}
@@ -155,7 +156,7 @@ def _with_timeout(fn, seconds: float):
 
 
 TREND_FRESH_S = 6 * 3600          # reuse a fetched result this long
-TREND_STALE_OK_S = 7 * 24 * 3600  # when Google blocks us, older real data still beats a simulation
+TREND_STALE_OK_S = 7 * 24 * 3600  # when Google blocks us, older real data still beats nothing
 TREND_BLOCK_S = 15 * 60           # pause all Google requests this long after being blocked
 TREND_CACHE_FILE = config.STORAGE_DIR / "trends_cache.json"
 _disk_lock = threading.Lock()
@@ -303,7 +304,7 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
     wx_signal, wx_motif = weather_signal(weather)
 
     try:
-        ctx = get_local_context(city["name"], WINDOW_DAYS)
+        ctx = get_local_context(city["name"], HOLIDAY_WINDOW_DAYS)
     except Exception:
         ctx = {"events": [], "holidays": [], "namedays": []}
 
@@ -363,6 +364,11 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
     body = local_body or master_body
     cost, minutes = ACTION_COST[action]
 
+    compliance = check_copy(headline, body, category=category)
+    if compliance["status"] == "fixed":  # use the auto-softened copy; the UI only needs status + note
+        headline = compliance.pop("headline")
+        body = compliance.pop("body")
+
     return {
         "city": city["name"],
         "lat": city["latitude"],
@@ -374,10 +380,19 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
         "headline": headline,
         "body": body,
         "motif": motif,
-        "compliance": check_copy(headline, body),
+        "compliance": compliance,
+        "category": category,
         "costUsd": cost,
         "minutesSaved": minutes,
     }
+
+
+def city_list() -> list[dict[str, Any]]:
+    """Every supported city, in the shape the upload page and landing map need."""
+    return [
+        {"id": c["id"], "name": c["name"], "county": c["county"], "lat": c["latitude"], "lon": c["longitude"]}
+        for c in load_cities()
+    ]
 
 
 def build_city_results(names: list[str], category: str) -> list[dict[str, Any]]:

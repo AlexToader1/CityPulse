@@ -1,13 +1,14 @@
 import { extractSwatches, legibleOnInk } from './brand-colors'
 import { baseCityResults } from './cities'
 import { API_BASE_URL, MOCK_DELAY_MS, MOCK_FAILURE_RATE } from './config'
-import { SAMPLE_BRAND_SWATCHES, sampleBrand } from './mock-data'
+import { ALL_CITIES, BASE_CITIES, SAMPLE_BRAND_SWATCHES, sampleBrand } from './mock-data'
 import type {
   AnalyzeBrandRequest,
   ApiResult,
   BrandDNA,
   CheckComplianceRequest,
   CheckComplianceResponse,
+  CityInfo,
   ExportAdRequest,
   ExportAdResponse,
   FetchCitiesRequest,
@@ -56,6 +57,27 @@ async function remote<T>(path: string, body: unknown): Promise<ApiResult<T>> {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Network error' }
   }
+}
+
+/** Every supported city. Live: GET /api/cities. Mock: the built-in list. */
+export async function fetchCityList(): Promise<ApiResult<CityInfo[]>> {
+  if (API_BASE_URL) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/cities`)
+      if (!res.ok) return { ok: false, error: await errorMessage(res) }
+      return { ok: true, data: (await res.json()) as CityInfo[] }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : 'Network error' }
+    }
+  }
+  return mock(
+    () =>
+      ALL_CITIES.map((name) => {
+        const base = BASE_CITIES.find((c) => c.city === name)
+        return { id: name.toLowerCase(), name, county: '', lat: base?.lat ?? 0, lon: base?.lon ?? 0 }
+      }),
+    false,
+  )
 }
 
 export async function fetchCities(req: FetchCitiesRequest): Promise<ApiResult<FetchCitiesResponse>> {

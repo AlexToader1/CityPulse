@@ -1,6 +1,7 @@
 'use client'
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { ChevronDown, Zap } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { EVENT_PRESETS } from '@/lib/citypulse/mock-data'

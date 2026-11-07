@@ -1,6 +1,7 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { useEffect, useState } from 'react'
 import type { BrandDNA } from '@/lib/citypulse/types'
 import { ArrowButton } from './primitives'
@@ -75,10 +76,10 @@ export function BrandReveal({ brand, onContinue }: { brand: BrandDNA; onContinue
           animate={themed ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
           transition={{ type: 'spring', stiffness: 400, damping: 24 }}
         >
-          <button type="button" onClick={onContinue} disabled={!themed} className="nb-btn-primary text-lg">
+          <button type="button" onClick={onContinue} disabled={!themed} className="nb-btn-primary !bg-yellow text-lg">
             Continue to dashboard
           </button>
-          <ArrowButton label="Continue to dashboard" onClick={onContinue} disabled={!themed} />
+          <ArrowButton label="Continue to dashboard" onClick={onContinue} disabled={!themed} className="!bg-white" />
         </motion.div>
       </div>
     </section>

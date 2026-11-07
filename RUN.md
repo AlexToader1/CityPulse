@@ -26,8 +26,8 @@ Set it to an empty string to run on mock data only.
 | Signal  | Source | Key |
 |---------|--------|-----|
 | Weather | Open-Meteo | none |
-| Events  | Ticketmaster Discovery API + curated `data/ro_events.json` | `TICKETMASTER_API_KEY` |
-| Search  | Google Trends via pytrends, queried **per city** (its county's region code): weekly momentum + the popular/rising local query (e.g. "cafenea van gogh"). Cached 6h, saved in `backend/storage/trends_cache.json`; if Google blocks us the last real data (up to 7 days) is reused, otherwise the signal is marked `simulated` | none (set `CITYPULSE_LIVE_TRENDS=0` to force simulated) |
+| Events  | Curated `data/ro_events.json` (real events with source links; Ticketmaster has none in Romania) | none |
+| Search  | Google Trends via pytrends, queried **per city** (its county's region code): weekly momentum + the popular/rising local query. Cached 6h, saved in `backend/storage/trends_cache.json`; if Google blocks us the last real data (up to 7 days) is reused, otherwise the city has no search signal | none (set `CITYPULSE_LIVE_TRENDS=0` to skip) |
 | Ad copy | Gemini | `GEMINI_API_KEY` |
 
 Check what is live: http://127.0.0.1:8000/api/status

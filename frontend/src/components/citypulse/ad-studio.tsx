@@ -1,6 +1,7 @@
 'use client'
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { Check, ChevronDown, Download, Pencil, RefreshCw, Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { checkCompliance, exportAd, generateAd } from '@/lib/citypulse/api'

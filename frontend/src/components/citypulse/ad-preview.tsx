@@ -1,6 +1,7 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { contrastWithInk, hexToRgb } from '@/lib/citypulse/brand-colors'
 import type { BrandDNA, Motif } from '@/lib/citypulse/types'
 

@@ -41,6 +41,9 @@ export type ApiError = { ok: false; error: string }
 export type ApiOk<T> = { ok: true; data: T }
 export type ApiResult<T> = ApiOk<T> | ApiError
 
+/** One supported city, from GET /api/cities. */
+export type CityInfo = { id: string; name: string; county: string; lat: number; lon: number }
+
 export type FetchCitiesRequest = { cities: string[]; category: BusinessCategory }
 export type FetchCitiesResponse = CityResult[]
 
