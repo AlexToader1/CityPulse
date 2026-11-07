@@ -30,8 +30,9 @@ ACTION_COST = {
     "LIGHT_TOUCH": (0.03, 20),
     "SKIP": (0.0, 0),
 }
-WINDOW_DAYS = 3        # weather + holidays
-EVENT_WINDOW_DAYS = 7  # events: ads need lead time
+WINDOW_DAYS = 3          # weather
+HOLIDAY_WINDOW_DAYS = 5  # holidays: a little lead time for greetings
+EVENT_WINDOW_DAYS = 10   # events: ads need lead time, and next weekend is always in range
 
 CATEGORY_KEYWORDS = {
     "Cafe": ["cafea", "cafenea", "brunch"],
@@ -204,7 +205,9 @@ def _live_trend(city: dict[str, Any], category: str) -> dict[str, Any] | None:
     if not data:
         return None
     county, name = _norm(city["county"]), _norm(city["name"])
-    interest = next((v for k, v in data["regions"].items() if county in k or name in k), None)
+    aliases = {"bucharest": "bucuresti"}
+    wanted = {county, name, aliases.get(county, county), aliases.get(name, name)}
+    interest = next((v for k, v in data["regions"].items() if any(w in k for w in wanted)), None)
     if interest is None:
         return None
     momentum = data["momentum"]
@@ -259,7 +262,7 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
     wx_signal, wx_motif = weather_signal(weather)
 
     try:
-        ctx = get_local_context(city["name"], WINDOW_DAYS)
+        ctx = get_local_context(city["name"], HOLIDAY_WINDOW_DAYS)
     except Exception:
         ctx = {"events": [], "holidays": [], "namedays": []}
 
@@ -313,6 +316,11 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
     body = local_body or master_body
     cost, minutes = ACTION_COST[action]
 
+    compliance = check_copy(headline, body, category=category)
+    if compliance["status"] == "fixed":  # use the auto-softened copy; the UI only needs status + note
+        headline = compliance.pop("headline")
+        body = compliance.pop("body")
+
     return {
         "city": city["name"],
         "lat": city["latitude"],
@@ -324,10 +332,19 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
         "headline": headline,
         "body": body,
         "motif": motif,
-        "compliance": check_copy(headline, body),
+        "compliance": compliance,
+        "category": category,
         "costUsd": cost,
         "minutesSaved": minutes,
     }
+
+
+def city_list() -> list[dict[str, Any]]:
+    """Every supported city, in the shape the upload page and landing map need."""
+    return [
+        {"id": c["id"], "name": c["name"], "county": c["county"], "lat": c["latitude"], "lon": c["longitude"]}
+        for c in load_cities()
+    ]
 
 
 def build_city_results(names: list[str], category: str) -> list[dict[str, Any]]:

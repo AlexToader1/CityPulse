@@ -7,6 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 
+from backend.services.compliance_rules import rules_info
 from backend.services.signals import load_cities
 from ml.signals.events import get_real_events
 
@@ -20,6 +21,7 @@ def status() -> dict[str, Any]:
         "trends_live": os.getenv("CITYPULSE_LIVE_TRENDS", "1") != "0",
         "gemini": bool(os.getenv("GEMINI_API_KEY")),
         "weather": "Open-Meteo (no key needed)",
+        "ad_rules": rules_info(),
     }
 
 
