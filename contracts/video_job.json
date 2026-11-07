@@ -1,0 +1,380 @@
+{
+  "$defs": {
+    "Product": {
+      "description": "Shared product shape. Other features can reuse it.",
+      "properties": {
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "title": {
+          "default": "",
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "price": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Price"
+        },
+        "currency": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Currency"
+        },
+        "brand": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Brand"
+        },
+        "image_urls": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Image Urls",
+          "type": "array"
+        }
+      },
+      "title": "Product",
+      "type": "object"
+    },
+    "PublishResult": {
+      "properties": {
+        "variant_id": {
+          "title": "Variant Id",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "direct",
+            "draft"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "publish_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publish Id"
+        },
+        "status": {
+          "default": "submitted",
+          "title": "Status",
+          "type": "string"
+        },
+        "privacy_level": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Privacy Level"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        }
+      },
+      "required": [
+        "variant_id",
+        "mode"
+      ],
+      "title": "PublishResult",
+      "type": "object"
+    },
+    "ScriptLine": {
+      "properties": {
+        "image_index": {
+          "description": "0-based index of the product image shown during this line",
+          "title": "Image Index",
+          "type": "integer"
+        },
+        "text": {
+          "description": "One spoken sentence of voiceover",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "image_index",
+        "text"
+      ],
+      "title": "ScriptLine",
+      "type": "object"
+    },
+    "Variant": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "script": {
+          "$ref": "#/$defs/VideoScript"
+        },
+        "status": {
+          "default": "pending",
+          "enum": [
+            "pending",
+            "rendering",
+            "done",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "video_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Video Url"
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        }
+      },
+      "required": [
+        "id",
+        "script"
+      ],
+      "title": "Variant",
+      "type": "object"
+    },
+    "VideoScript": {
+      "properties": {
+        "angle": {
+          "description": "Short name of the creative angle, e.g. 'problem-solution'",
+          "title": "Angle",
+          "type": "string"
+        },
+        "lines": {
+          "description": "Voiceover lines in order. First = hook, last = call to action",
+          "items": {
+            "$ref": "#/$defs/ScriptLine"
+          },
+          "title": "Lines",
+          "type": "array"
+        },
+        "caption": {
+          "description": "TikTok post caption (without hashtags)",
+          "title": "Caption",
+          "type": "string"
+        },
+        "hashtags": {
+          "description": "3-6 hashtags without the # sign",
+          "items": {
+            "type": "string"
+          },
+          "title": "Hashtags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "angle",
+        "lines",
+        "caption",
+        "hashtags"
+      ],
+      "title": "VideoScript",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "status": {
+      "default": "queued",
+      "enum": [
+        "queued",
+        "running",
+        "done",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "step": {
+      "default": "queued",
+      "title": "Step",
+      "type": "string"
+    },
+    "progress": {
+      "default": 0.0,
+      "title": "Progress",
+      "type": "number"
+    },
+    "language": {
+      "default": "en",
+      "title": "Language",
+      "type": "string"
+    },
+    "n_variants": {
+      "default": 3,
+      "title": "N Variants",
+      "type": "integer"
+    },
+    "brand_tone": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Brand Tone"
+    },
+    "product": {
+      "$ref": "#/$defs/Product"
+    },
+    "product_summary": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Product Summary"
+    },
+    "variants": {
+      "items": {
+        "$ref": "#/$defs/Variant"
+      },
+      "title": "Variants",
+      "type": "array"
+    },
+    "publishes": {
+      "items": {
+        "$ref": "#/$defs/PublishResult"
+      },
+      "title": "Publishes",
+      "type": "array"
+    },
+    "cost": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cost"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id"
+  ],
+  "title": "VideoJob",
+  "type": "object"
+}
