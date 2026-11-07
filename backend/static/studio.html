@@ -3,101 +3,194 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Generator video TikTok</title>
+<title>CityPulse TikTok Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap">
 <style>
+  /* Same palette and neo-brutalist rules as the CityPulse frontend (frontend/src/app/globals.css). */
   :root {
-    --bg: #f6f6f8; --card: #fff; --text: #161823; --muted: #6b6f7b; --line: #e4e5ea;
-    --accent: #fe2c55; --accent-dark: #d81e45; --ok: #12805c; --err: #c0182d;
+    --cream: #faf5ee; --white: #fff; --ink: #111; --yellow: #ffe14d; --lime: #b8f24a; --pink: #ff5fa8;
+    --sky: #3da5ff; --orange: #ffb066; --lavender: #c9b6ff; --mint: #dcebdd; --grey: #b8b8b8;
+    --radius: .875rem; --shadow: 4px 4px 0 0 var(--ink); --shadow-sm: 2px 2px 0 0 var(--ink);
+    --sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Space Mono", ui-monospace, monospace;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #121316; --card: #1c1d22; --text: #f2f2f4; --muted: #9a9ca6; --line: #2c2d34; --ok: #3ecf9b; --err: #ff6b7d; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 560px; margin: 0 auto; padding: 24px 16px 64px; }
-  h1 { font-size: 24px; margin: 0 0 4px; }
-  .sub { color: var(--muted); margin: 0 0 20px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
-  label.field { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
-  input[type=text], select { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; }
-  .row { display: flex; gap: 12px; margin-top: 14px; }
-  .row > div { flex: 1; }
-  .drop { display: block; border: 2px dashed var(--line); border-radius: 12px; padding: 22px 12px; text-align: center; color: var(--muted); cursor: pointer; }
-  .drop:hover, .drop.over { border-color: var(--accent); color: var(--text); }
-  .drop input { display: none; }
-  .thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .thumb { position: relative; width: 72px; height: 72px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .thumb button { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border: 0; border-radius: 50%; background: rgba(0,0,0,.65); color: #fff; cursor: pointer; line-height: 1; padding: 0; }
-  .or { text-align: center; color: var(--muted); font-size: 13px; margin: 14px 0; }
-  button.primary { width: 100%; margin-top: 16px; padding: 14px; border: 0; border-radius: 12px; background: var(--accent); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-  button.primary:hover:not(:disabled) { background: var(--accent-dark); }
-  button:disabled { opacity: .55; cursor: not-allowed; }
-  .link { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; }
-  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 10px; }
-  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .4s; }
-  .msg { margin: 10px 0 0; font-size: 14px; }
-  .msg.err { color: var(--err); } .msg.ok { color: var(--ok); } .msg.muted { color: var(--muted); }
-  .tt { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 16px; color: var(--muted); }
-  .tt a { color: var(--accent); font-weight: 600; text-decoration: none; }
-  .watch { display: block; text-align: center; padding: 12px; border: 2px solid var(--accent); color: var(--accent); border-radius: 12px; font-weight: 700; text-decoration: none; margin-bottom: 12px; }
-  video { width: 100%; max-height: 520px; background: #000; border-radius: 12px; }
-  .angle { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-  .caption { margin: 10px 0 4px; }
-  .actions { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  * { box-sizing: border-box; border-color: var(--ink); }
+  html { font-size: 18px; background: var(--cream); }
+  body { margin: 0; background: var(--cream); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; box-shadow: 0 0 0 6px var(--yellow); border-radius: 6px; }
+  main { max-width: 1240px; margin: 0 auto; padding: 16px 16px 56px; }
   [hidden] { display: none !important; }
+
+  .mono { font-family: var(--mono); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .pill { display: inline-flex; align-items: center; gap: .4rem; border: 2px solid var(--ink); border-radius: 999px; padding: .2rem .75rem; font-size: .8rem; font-weight: 700; color: var(--ink); background: var(--white); text-decoration: none; }
+  .card { background: var(--white); border: 2px solid var(--ink); border-radius: 1.2rem; box-shadow: var(--shadow); overflow: hidden; }
+  .card-head { padding: 1rem 1.3rem .9rem; border-bottom: 2px solid var(--ink); }
+  .card-head h2 { margin: .15rem 0 0; font-size: 1.55rem; line-height: 1.15; }
+  .card-head p { margin: .3rem 0 0; font-size: .85rem; color: #3a3a3a; }
+  .card-body { padding: 1.1rem 1.3rem 1.3rem; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border: 2px solid var(--ink); border-radius: var(--radius); padding: .6rem 1.2rem; font: 700 .95rem var(--sans); color: var(--ink); background: var(--white); box-shadow: var(--shadow); cursor: pointer; text-decoration: none; transition: transform .15s ease-out; }
+  .btn:hover:not(:disabled) { transform: translate(-2px, -2px); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.primary { background: var(--yellow); }
+  .btn.block { width: 100%; }
+  .linkbtn { background: none; border: 0; padding: 0; font: 700 .8rem var(--sans); color: var(--ink); text-decoration: underline; cursor: pointer; }
+
+  /* top bar */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin: 4px 0 14px; }
+  .brand { display: flex; align-items: center; gap: .6rem; }
+  .logo { background: var(--yellow); box-shadow: var(--shadow-sm); font-size: 1rem; padding: .25rem .8rem; }
+  .logo svg { width: 1rem; height: 1rem; }
+
+  /* stat tiles */
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin: 0 0 1rem; }
+  @media (min-width: 760px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+  .stat { border: 2px solid var(--ink); border-radius: 1.2rem; padding: .7rem 1rem; box-shadow: var(--shadow-sm); }
+  .stat dt { margin: 0; } .stat dd { margin: .25rem 0 0; font: 700 1.6rem var(--mono); font-variant-numeric: tabular-nums; }
+
+  .layout { display: grid; gap: 1rem; align-items: start; }
+  @media (min-width: 940px) { .layout { grid-template-columns: 1.25fr 1fr; } }
+
+  /* form */
+  .drop { position: relative; display: block; border: 2px solid var(--ink); border-radius: var(--radius); padding: 2.1rem 1rem; text-align: center; cursor: pointer;
+          background-color: var(--cream);
+          background-image: linear-gradient(var(--mint) 1px, transparent 1px), linear-gradient(90deg, var(--mint) 1px, transparent 1px); background-size: 26px 26px; }
+  .drop.over { background-color: var(--yellow); }
+  .drop input { display: none; }
+  .drop strong { font-size: 1.1rem; display: block; }
+  .drop span { font-size: .85rem; color: #3a3a3a; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .9rem; }
+  .thumb { position: relative; width: 84px; height: 84px; border: 2px solid var(--ink); border-radius: .8rem; box-shadow: var(--shadow-sm); overflow: visible; background: var(--white); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: .65rem; }
+  .thumb button { position: absolute; top: -9px; right: -9px; width: 24px; height: 24px; border: 2px solid var(--ink); border-radius: 50%; background: var(--pink); color: var(--ink); font: 700 .8rem var(--sans); cursor: pointer; line-height: 1; padding: 0; }
+  .divider { text-align: center; margin: 1.1rem 0 .9rem; }
+  label.field { display: block; margin: 0 0 .35rem; }
+  input[type=text] { width: 100%; padding: .65rem .8rem; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--white); color: var(--ink); font: 500 .95rem var(--sans); }
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-top: 1rem; }
+  .seg { display: flex; gap: 2px; border: 2px solid var(--ink); border-radius: 999px; padding: 3px; background: var(--cream); }
+  .seg button { flex: 1; border: 2px solid transparent; border-radius: 999px; background: transparent; padding: .3rem .4rem; font: 700 .9rem var(--sans); color: var(--ink); cursor: pointer; }
+  .seg button[aria-pressed=true] { background: var(--white); border-color: var(--ink); }
+  .seg:has(button:disabled) { opacity: .6; }
+  #go { margin-top: 1.2rem; font-size: 1.05rem; padding: .8rem 1.2rem; }
+
+  /* notes / status */
+  .note { border: 2px solid var(--ink); border-radius: .8rem; padding: .5rem .8rem; font-size: .85rem; font-weight: 700; margin-top: .8rem; background: var(--white); }
+  .note.err { background: var(--pink); } .note.ok { background: var(--lime); } .note.muted { background: var(--cream); font-weight: 500; }
+
+  /* right panel */
+  .empty { border: 2px dashed var(--ink); border-radius: var(--radius); padding: 2.4rem 1rem; text-align: center; background: var(--cream); }
+  .empty svg { width: 52px; height: 52px; margin-bottom: .5rem; }
+  .empty strong { display: block; font-size: 1.1rem; }
+  .bar { height: 20px; border: 2px solid var(--ink); border-radius: 999px; background: var(--white); overflow: hidden; margin-top: .7rem; }
+  .bar > div { height: 100%; width: 0; background: var(--pink); border-right: 2px solid var(--ink); transition: width .4s; }
+  .variant { border: 2px solid var(--ink); border-radius: var(--radius); padding: .9rem; background: var(--white); margin-bottom: 1rem; }
+  .variant:last-child { margin-bottom: 0; }
+  .vhead { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .7rem; flex-wrap: wrap; }
+  .frame { border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; background: #000; }
+  .frame video { display: block; width: 100%; max-height: 540px; background: #000; }
+  .caption { margin: .8rem 0 .4rem; font-size: .95rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .9rem; }
+  .tags .pill { background: var(--lavender); font-size: .72rem; padding: .1rem .55rem; }
+  .vbtns { display: grid; gap: .7rem; }
+  .vlinks { display: flex; justify-content: space-between; margin-top: .8rem; }
 </style>
 </head>
 <body>
 <main>
-  <h1>Generator video TikTok</h1>
-  <p class="sub">Pune pozele produsului, generează videoclipul și postează-l.</p>
-
-  <div class="tt" id="tt">Se verifică TikTok…</div>
-
-  <section class="card" id="form">
-    <label class="drop" id="drop">
-      <input type="file" id="files" accept="image/*" multiple>
-      <strong>Alege pozele produsului</strong><br>
-      <span>sau trage-le aici (2–6 poze)</span>
-    </label>
-    <div class="thumbs" id="thumbs"></div>
-
-    <div class="or">sau folosește un link de produs</div>
-    <label class="field" for="url">Link produs (opțional)</label>
-    <input type="text" id="url" placeholder="https://…">
-
-    <div class="row">
-      <div>
-        <label class="field" for="lang">Limba</label>
-        <select id="lang"><option value="ro">Română</option><option value="en">English</option></select>
-      </div>
-      <div>
-        <label class="field" for="n">Câte variante</label>
-        <select id="n"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-      </div>
+  <header class="top">
+    <div class="brand">
+      <span class="pill logo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5l2.6 7.1 7.4.3-5.8 4.6 2 7.2L12 16.6l-6.2 4.1 2-7.2L2 8.9l7.4-.3z" fill="#111"/></svg>
+        CityPulse
+      </span>
+      <span class="mono">TikTok Studio</span>
     </div>
+    <div id="tt" class="pill">Se verifică TikTok…</div>
+  </header>
 
-    <button class="primary" id="go">Generează videoclip</button>
-    <p class="msg err" id="formErr" hidden></p>
-  </section>
+  <dl class="stats" aria-label="Rezumat">
+    <div class="stat" style="background:var(--pink)"><dt class="mono">Poze adăugate</dt><dd id="sPhotos">0</dd></div>
+    <div class="stat" style="background:var(--grey)"><dt class="mono">Videoclipuri gata</dt><dd id="sVideos">0</dd></div>
+    <div class="stat" style="background:var(--sky)"><dt class="mono">Cost estimat</dt><dd id="sCost">$0.00</dd></div>
+    <div class="stat" style="background:var(--lime)"><dt class="mono">Timp economisit (est.)</dt><dd id="sTime">0.0 h</dd></div>
+  </dl>
 
-  <section class="card" id="progress" hidden>
-    <strong id="stepText">Pornesc…</strong>
-    <div class="bar"><div id="barFill"></div></div>
-    <p class="msg muted" id="progressNote">Durează de obicei sub un minut.</p>
-    <p class="msg err" id="jobErr" hidden></p>
-    <button class="link" id="again" hidden>Încearcă din nou</button>
-  </section>
+  <div class="layout">
+    <section class="card" aria-labelledby="formTitle">
+      <div class="card-head">
+        <div class="mono">Pasul 1</div>
+        <h2 id="formTitle">Pozele produsului</h2>
+        <p>Adaugă 2–6 poze, sau lipește un link de produs. Restul îl face aplicația.</p>
+      </div>
+      <div class="card-body">
+        <label class="drop" id="drop">
+          <input type="file" id="files" accept="image/*" multiple>
+          <strong>Alege pozele</strong>
+          <span>sau trage-le aici</span>
+        </label>
+        <div class="thumbs" id="thumbs"></div>
 
-  <div id="results"></div>
+        <div class="divider mono">sau</div>
+        <label class="field mono" for="url">Link de produs (opțional)</label>
+        <input type="text" id="url" placeholder="https://…">
+
+        <div class="opts">
+          <div>
+            <div class="field mono">Limba</div>
+            <div class="seg" id="langSeg">
+              <button type="button" data-v="ro" aria-pressed="true">Română</button>
+              <button type="button" data-v="en" aria-pressed="false">English</button>
+            </div>
+          </div>
+          <div>
+            <div class="field mono">Variante</div>
+            <div class="seg" id="nSeg">
+              <button type="button" data-v="1" aria-pressed="true">1</button>
+              <button type="button" data-v="2" aria-pressed="false">2</button>
+              <button type="button" data-v="3" aria-pressed="false">3</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn primary block" id="go">Generează videoclip</button>
+        <div class="note err" id="formErr" hidden></div>
+      </div>
+    </section>
+
+    <aside class="card" aria-labelledby="panelTitle">
+      <div class="card-head">
+        <div class="mono">Pasul 2</div>
+        <h2 id="panelTitle">Videoclipul tău</h2>
+      </div>
+      <div class="card-body">
+        <div class="empty" id="empty">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="#ffe14d" stroke="#111" stroke-width="2" stroke-linejoin="round"/></svg>
+          <strong>Aici apare videoclipul</strong>
+          <span class="mono">Adaugă pozele și apasă Generează</span>
+        </div>
+        <div id="progress" hidden>
+          <strong id="stepText">Pornesc…</strong>
+          <div class="bar"><div id="barFill"></div></div>
+          <div class="note muted" id="progressNote">Durează de obicei sub un minut.</div>
+        </div>
+        <div class="note err" id="jobErr" hidden></div>
+        <div id="results"></div>
+      </div>
+    </aside>
+  </div>
 </main>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const MAX_FILES = 6;
+const HOURS_SAVED_PER_VIDEO = 1.5; // rough estimate of manual filming + editing time, for the "Est." tile
 let files = [];
 let timer = null;
+let lang = "ro";
+let nVariants = 1;
 let tiktok = { configured: false, connected: false };
 
 const STEPS = [
@@ -109,46 +202,60 @@ const STEPS = [
   ["Rendering video", "Montez videoclipul…"],
 ];
 const stepLabel = (s) => (STEPS.find(([k]) => s.startsWith(k)) || [0, s])[1];
+const show = (el, text) => { el.textContent = text; el.hidden = !text; };
 
-function show(el, text) { el.textContent = text; el.hidden = !text; }
+function setStats({ photos, videos, cost }) {
+  if (photos !== undefined) $("sPhotos").textContent = photos;
+  if (videos !== undefined) { $("sVideos").textContent = videos; $("sTime").textContent = (videos * HOURS_SAVED_PER_VIDEO).toFixed(1) + " h"; }
+  if (cost !== undefined) $("sCost").textContent = "$" + cost.toFixed(2);
+}
 
-// ---- TikTok connection ------------------------------------------------------
+// segmented controls
+function seg(id, onPick) {
+  const box = $(id);
+  box.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b || b.disabled) return;
+    box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    onPick(b.dataset.v);
+  });
+}
+seg("langSeg", (v) => (lang = v));
+seg("nSeg", (v) => (nVariants = Number(v)));
+const lockForm = (locked) => { $("go").disabled = locked; document.querySelectorAll(".seg button").forEach((b) => (b.disabled = locked)); };
+
+// ---- TikTok connection ----------------------------------------------------------
 async function loadTikTok() {
+  try { tiktok = await (await fetch("/api/tiktok/status")).json(); }
+  catch { tiktok = { configured: false, connected: false }; }
   const box = $("tt");
-  try {
-    tiktok = await (await fetch("/api/tiktok/status")).json();
-  } catch { tiktok = { configured: false, connected: false }; }
   box.textContent = "";
-  const left = document.createElement("span");
   if (!tiktok.configured) {
-    left.textContent = "TikTok nu este configurat (poți descărca videoclipurile).";
-    box.append(left);
+    box.style.background = "var(--grey)"; box.textContent = "TikTok neconfigurat";
   } else if (tiktok.connected) {
-    left.textContent = "TikTok: conectat ca " + ((tiktok.user && tiktok.user.display_name) || "cont");
-    box.append(left);
+    box.style.background = "var(--lime)";
+    box.textContent = "TikTok · conectat ca " + ((tiktok.user && tiktok.user.display_name) || "cont");
   } else {
-    left.textContent = "TikTok: neconectat";
+    box.style.background = "var(--pink)";
     const a = document.createElement("a");
-    a.href = "/api/tiktok/login"; a.textContent = "Conectează contul";
-    box.append(left, a);
+    a.href = "/api/tiktok/login"; a.textContent = "Conectează TikTok →"; a.style.color = "inherit";
+    box.append(a);
   }
 }
 
-// ---- Photos -----------------------------------------------------------------
+// ---- Photos ---------------------------------------------------------------------------
 function renderThumbs() {
-  const box = $("thumbs");
-  box.textContent = "";
+  const box = $("thumbs"); box.textContent = "";
   files.forEach((f, i) => {
     const t = document.createElement("div"); t.className = "thumb";
     const img = document.createElement("img"); img.src = URL.createObjectURL(f); img.alt = f.name;
-    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.title = "Șterge";
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.title = "Șterge"; x.setAttribute("aria-label", "Șterge poza");
     x.onclick = () => { files.splice(i, 1); renderThumbs(); };
     t.append(img, x); box.append(t);
   });
+  setStats({ photos: files.length });
 }
 function addFiles(list) {
-  const imgs = Array.from(list).filter((f) => f.type.startsWith("image/"));
-  files = files.concat(imgs).slice(0, MAX_FILES);
+  files = files.concat(Array.from(list).filter((f) => f.type.startsWith("image/"))).slice(0, MAX_FILES);
   renderThumbs();
 }
 $("files").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
@@ -157,7 +264,7 @@ const drop = $("drop");
 ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
 
-// ---- Generate ---------------------------------------------------------------
+// ---- Generate ---------------------------------------------------------------------------
 $("go").addEventListener("click", async () => {
   show($("formErr"), "");
   const url = $("url").value.trim();
@@ -165,88 +272,81 @@ $("go").addEventListener("click", async () => {
   const fd = new FormData();
   if (url) fd.append("url", url);
   files.forEach((f) => fd.append("images", f));
-  fd.append("language", $("lang").value);
-  fd.append("n_variants", $("n").value);
-  $("go").disabled = true;
+  fd.append("language", lang);
+  fd.append("n_variants", String(nVariants));
+  lockForm(true);
   try {
     const res = await fetch("/api/video/jobs", { method: "POST", body: fd });
     const data = await res.json();
     if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Cererea a eșuat.");
     startPolling(data.id);
-  } catch (e) {
-    show($("formErr"), e.message);
-    $("go").disabled = false;
-  }
+  } catch (e) { show($("formErr"), e.message); lockForm(false); }
 });
 
 function startPolling(id) {
   location.hash = "job=" + id;
-  $("form").hidden = true;
-  $("results").textContent = "";
-  $("progress").hidden = false;
-  $("again").hidden = true;
-  show($("jobErr"), "");
-  $("progressNote").hidden = false;
+  lockForm(true);
+  $("empty").hidden = true; $("results").textContent = ""; show($("jobErr"), "");
+  $("progress").hidden = false; $("progressNote").hidden = false; $("stepText").textContent = "Pornesc…"; $("barFill").style.width = "0";
   clearInterval(timer);
   const tick = async () => {
     try {
       const job = await (await fetch("/api/video/jobs/" + id)).json();
       $("stepText").textContent = job.status === "done" ? "Gata!" : stepLabel(job.step || "");
       $("barFill").style.width = Math.round((job.progress || 0) * 100) + "%";
-      if (job.status === "done") { clearInterval(timer); $("progress").hidden = true; renderResults(job); }
+      if (job.cost) setStats({ cost: job.cost.total_usd });
+      if (job.status === "done") { clearInterval(timer); $("progress").hidden = true; lockForm(false); renderResults(job); }
       if (job.status === "failed") {
-        clearInterval(timer);
+        clearInterval(timer); lockForm(false);
         $("stepText").textContent = "Nu a mers";
         $("progressNote").hidden = true;
         show($("jobErr"), job.error || "Eroare necunoscută.");
-        $("again").hidden = false;
       }
     } catch { /* retry on the next tick */ }
   };
   tick(); timer = setInterval(tick, 2000);
 }
-$("again").addEventListener("click", () => { history.replaceState(null, "", location.pathname); $("progress").hidden = true; $("form").hidden = false; $("go").disabled = false; });
 
-// ---- Results + publish --------------------------------------------------------
+// ---- Results + publish -----------------------------------------------------------------------
 function renderResults(job) {
-  const box = $("results");
-  box.textContent = "";
-  job.variants.filter((v) => v.status === "done").forEach((v, i) => {
-    const card = document.createElement("section"); card.className = "card";
+  const box = $("results"); box.textContent = "";
+  const done = job.variants.filter((v) => v.status === "done");
+  setStats({ videos: done.length, cost: job.cost ? job.cost.total_usd : undefined });
+  done.forEach((v, i) => {
+    const card = document.createElement("div"); card.className = "variant";
 
-    const angle = document.createElement("div"); angle.className = "angle";
-    angle.textContent = "Varianta " + (i + 1) + " · " + v.script.angle;
+    const head = document.createElement("div"); head.className = "vhead";
+    const lab = document.createElement("span"); lab.className = "mono"; lab.textContent = "Varianta " + (i + 1);
+    const angle = document.createElement("span"); angle.className = "pill"; angle.style.background = "var(--orange)"; angle.textContent = v.script.angle;
+    head.append(lab, angle);
 
-    const watch = document.createElement("a"); watch.className = "watch";
-    watch.href = v.video_url; watch.target = "_blank"; watch.rel = "noopener";
-    watch.textContent = "▶ Vezi videoclipul";
-
+    const frame = document.createElement("div"); frame.className = "frame";
     const video = document.createElement("video");
-    video.src = v.video_url; video.controls = true; video.playsInline = true; video.preload = "metadata";
+    video.src = v.video_url + "#t=0.5"; /* shows a frame before play */ video.controls = true; video.playsInline = true; video.preload = "metadata";
+    frame.append(video);
 
-    const cap = document.createElement("p"); cap.className = "caption";
-    cap.textContent = v.script.caption + " " + v.script.hashtags.map((h) => "#" + h).join(" ");
+    const cap = document.createElement("p"); cap.className = "caption"; cap.textContent = v.script.caption;
+    const tags = document.createElement("div"); tags.className = "tags";
+    v.script.hashtags.forEach((h) => { const p = document.createElement("span"); p.className = "pill"; p.textContent = "#" + h; tags.append(p); });
 
-    const post = document.createElement("button"); post.className = "primary"; post.textContent = "Postează pe TikTok";
-    const status = document.createElement("p"); status.className = "msg"; status.hidden = true;
-    const setStatus = (text, kind) => { status.textContent = text; status.className = "msg " + kind; status.hidden = !text; };
+    const watch = document.createElement("a"); watch.className = "btn"; watch.href = v.video_url; watch.target = "_blank"; watch.rel = "noopener"; watch.textContent = "▶ Vezi videoclipul";
+    const post = document.createElement("button"); post.className = "btn primary"; post.textContent = "Postează pe TikTok";
+    const status = document.createElement("div"); status.className = "note"; status.hidden = true;
+    const setStatus = (text, kind) => { status.textContent = text; status.className = "note " + kind; status.hidden = !text; };
     if (!tiktok.connected) { post.disabled = true; setStatus("Conectează contul TikTok (sus) ca să poți posta.", "muted"); }
+    const btns = document.createElement("div"); btns.className = "vbtns"; btns.append(watch, post);
 
-    const actions = document.createElement("div"); actions.className = "actions";
-    const draft = document.createElement("button"); draft.className = "link"; draft.textContent = "Trimite în drafturi";
-    const dl = document.createElement("a"); dl.href = v.video_url; dl.download = "tiktok-" + v.id + ".mp4"; dl.textContent = "Descarcă";
-    dl.style.cssText = "font-size:13px;color:var(--muted)";
-    actions.append(draft, dl);
+    const links = document.createElement("div"); links.className = "vlinks";
+    const draft = document.createElement("button"); draft.className = "linkbtn"; draft.textContent = "Trimite în drafturi";
+    const dl = document.createElement("a"); dl.className = "linkbtn"; dl.href = v.video_url; dl.download = "tiktok-" + v.id + ".mp4"; dl.textContent = "Descarcă";
+    links.append(draft, dl);
 
     post.onclick = () => publish(job.id, v.id, "direct", [post, draft], setStatus);
     draft.onclick = () => publish(job.id, v.id, "draft", [post, draft], setStatus);
 
-    card.append(angle, watch, video, cap, post, status, actions);
+    card.append(head, frame, cap, tags, btns, status, links);
     box.append(card);
   });
-  const again = document.createElement("button"); again.className = "link"; again.textContent = "Generează alt videoclip";
-  again.onclick = () => { history.replaceState(null, "", location.pathname); box.textContent = ""; $("form").hidden = false; $("go").disabled = false; };
-  box.append(again);
 }
 
 async function publish(jobId, variantId, mode, buttons, setStatus) {
@@ -259,22 +359,16 @@ async function publish(jobId, variantId, mode, buttons, setStatus) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Postarea a eșuat.");
-    await waitForPublish(data, mode, setStatus);
-  } catch (e) {
-    setStatus(e.message, "err");
-    buttons.forEach((b) => (b.disabled = false));
-  }
+    await waitForPublish(data, setStatus);
+  } catch (e) { setStatus(e.message, "err"); buttons.forEach((b) => (b.disabled = false)); }
 }
 
-async function waitForPublish(result, mode, setStatus) {
+async function waitForPublish(result, setStatus) {
   for (let i = 0; i < 60; i++) {
     let st = {};
     try { st = await (await fetch("/api/video/publish/" + result.publish_id)).json(); } catch {}
     const s = st.status || "";
-    if (s === "PUBLISH_COMPLETE") {
-      const priv = result.privacy_level === "SELF_ONLY" ? " (privat: doar contul tău îl vede)" : "";
-      return setStatus("✓ Postat pe TikTok" + priv, "ok");
-    }
+    if (s === "PUBLISH_COMPLETE") return setStatus("✓ Postat pe TikTok" + (result.privacy_level === "SELF_ONLY" ? " (privat: doar contul tău îl vede)" : ""), "ok");
     if (s === "SEND_TO_USER_INBOX") return setStatus("✓ Trimis în drafturi. Deschide TikTok pe telefon ca să-l postezi.", "ok");
     if (s === "FAILED") throw new Error("TikTok a refuzat videoclipul: " + (st.fail_reason || "motiv necunoscut"));
     setStatus("TikTok procesează videoclipul…", "muted");
@@ -283,7 +377,7 @@ async function waitForPublish(result, mode, setStatus) {
   setStatus("TikTok încă procesează. Verifică în aplicația TikTok peste câteva minute.", "muted");
 }
 
-// ---- Start --------------------------------------------------------------------
+// ---- Start -------------------------------------------------------------------------------------
 loadTikTok().then(() => {
   const m = location.hash.match(/job=([a-z0-9]+)/);
   if (m) startPolling(m[1]);
