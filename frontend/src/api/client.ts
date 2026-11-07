@@ -1,9 +1,64 @@
-// API client. Each feature keeps its calls in its own section.
-export const API_BASE: string =
-  (import.meta as any).env?.VITE_API_URL ?? "http://localhost:8000";
+export type CitySignal = {
+  id: string;
+  name: string;
+  county: string;
+  latitude: number;
+  longitude: number;
+  score: number;
+  signals: {
+    events: Array<Record<string, unknown>>;
+    holidays: Array<Record<string, unknown>>;
+    namedays: Array<Record<string, unknown>>;
+    rain_probability_percent: number;
+  };
+  data_status: string;
+};
+
+export type HeatmapResponse = {
+  generated_at: string;
+  days: number;
+  cities: CitySignal[];
+};
+
+const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `CityPulse API error (${response.status})`);
+  }
+  return response.json() as Promise<T>;
+}
+
+export function getHeatmap(days = 7): Promise<HeatmapResponse> {
+  return request<HeatmapResponse>(`/heatmap?days=${days}`);
+}
+
+export function getCity(cityId: string, days = 7): Promise<CitySignal> {
+  return request<CitySignal>(`/city/${encodeURIComponent(cityId)}?days=${days}`);
+}
+
+export function generateInsight(question: string): Promise<Record<string, unknown>> {
+  return request<Record<string, unknown>>("/generate", {
+    method: "POST",
+    body: JSON.stringify({ question }),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// TikTok video feature
+// These endpoints live at the API root (/api/video, /api/tiktok, /media), and the
+// job creation call sends multipart form data, so they don't use `request` above
+// (it forces a JSON Content-Type).
+// ---------------------------------------------------------------------------
+const ROOT_BASE: string = API_BASE.replace(/\/api\/?$/, "");
+
+async function rootRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${ROOT_BASE}${path}`, init);
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -17,11 +72,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 /** Turns a backend media path ("/media/...") into a full URL. */
-export const mediaUrl = (path?: string | null) => (path ? `${API_BASE}${path}` : "");
+export const mediaUrl = (path?: string | null) => (path ? `${ROOT_BASE}${path}` : "");
 
-// ---------------------------------------------------------------------------
-// TikTok video feature
-// ---------------------------------------------------------------------------
 export interface ScriptLine { image_index: number; text: string }
 export interface VideoScript { angle: string; lines: ScriptLine[]; caption: string; hashtags: string[] }
 export interface Variant {
@@ -71,25 +123,25 @@ export function createVideoJob(input: CreateVideoJobInput): Promise<VideoJob> {
   form.append("language", input.language ?? "en");
   form.append("n_variants", String(input.nVariants ?? 3));
   (input.images ?? []).forEach((f) => form.append("images", f));
-  return request<VideoJob>("/api/video/jobs", { method: "POST", body: form });
+  return rootRequest<VideoJob>("/api/video/jobs", { method: "POST", body: form });
 }
 
-export const getVideoJob = (id: string) => request<VideoJob>(`/api/video/jobs/${id}`);
+export const getVideoJob = (id: string) => rootRequest<VideoJob>(`/api/video/jobs/${id}`);
 
 export const publishVariant = (jobId: string, variantId: string, mode: "direct" | "draft" = "direct") =>
-  request<PublishResult>(`/api/video/jobs/${jobId}/publish`, {
+  rootRequest<PublishResult>(`/api/video/jobs/${jobId}/publish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ variant_id: variantId, mode }),
   });
 
 export const getPublishStatus = (publishId: string) =>
-  request<Record<string, unknown>>(`/api/video/publish/${publishId}`);
+  rootRequest<Record<string, unknown>>(`/api/video/publish/${publishId}`);
 
 export interface TikTokStatus {
   configured: boolean;
   connected: boolean;
   user?: { display_name?: string; avatar_url?: string } | null;
 }
-export const getTikTokStatus = () => request<TikTokStatus>("/api/tiktok/status");
-export const tiktokLoginUrl = () => `${API_BASE}/api/tiktok/login`;
+export const getTikTokStatus = () => rootRequest<TikTokStatus>("/api/tiktok/status");
+export const tiktokLoginUrl = () => `${ROOT_BASE}/api/tiktok/login`;
