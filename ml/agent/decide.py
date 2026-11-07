@@ -40,7 +40,7 @@ def read_json_report(path: str) -> dict[str, Any]:
 
 
 def get_local_context(city: str, days: int = 7) -> dict[str, Any]:
-    """Read city metadata, upcoming demo events, holidays, and namedays."""
+    """Read city metadata, upcoming events (real or demo), holidays, and namedays."""
     if not city.strip():
         raise ValueError("city must not be empty")
     if not 1 <= days <= 16:
@@ -60,20 +60,38 @@ def get_local_context(city: str, days: int = 7) -> dict[str, Any]:
         available = ", ".join(item["name"] for item in cities)
         raise ValueError(f"Unknown city {city!r}. Choose one of: {available}")
 
-    with (ROOT / "data" / "ro_events.json").open(encoding="utf-8") as file:
-        event_payload = json.load(file)
+    # Use the new real events module when available
+    try:
+        root_string = str(ROOT)
+        if root_string not in sys.path:
+            sys.path.insert(0, root_string)
+        from ml.signals.events import get_real_events
+
+        events_payload = get_real_events(selected_city["name"], days=days)
+        events = events_payload.get("events", [])
+        events_data_status = events_payload.get(
+            "data_status", "real events data unavailable"
+        )
+    except Exception:
+        # Fallback to demo events
+        with (ROOT / "data" / "ro_events.json").open(encoding="utf-8") as file:
+            event_payload = json.load(file)
+        today = date.today()
+        end = today.fromordinal(today.toordinal() + days - 1)
+        events = [
+            event
+            for event in event_payload["events"]
+            if event["city"].casefold() == selected_city["name"].casefold()
+            and event["start_date"] <= end.isoformat()
+            and event["end_date"] >= today.isoformat()
+        ]
+        events_data_status = "curated demo data; verify before production use"
+
     with (ROOT / "data" / "ro_holidays_namedays.json").open(encoding="utf-8") as file:
         calendar = json.load(file)
 
     today = date.today()
     end = today.fromordinal(today.toordinal() + days - 1)
-    events = [
-        event
-        for event in event_payload["events"]
-        if event["city"].casefold() == selected_city["name"].casefold()
-        and event["start_date"] <= end.isoformat()
-        and event["end_date"] >= today.isoformat()
-    ]
     holidays = [
         holiday
         for holiday in calendar["holidays"]
@@ -90,7 +108,7 @@ def get_local_context(city: str, days: int = 7) -> dict[str, Any]:
         "events": events,
         "holidays": holidays,
         "namedays": namedays,
-        "data_status": "curated demo data; verify before production use",
+        "data_status": events_data_status,
     }
 
 

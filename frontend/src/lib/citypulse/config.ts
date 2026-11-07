@@ -24,6 +24,7 @@ export const MOCK_DELAY_MS = { min: 300, max: 900 } as const
 /** Set to a value > 0 (or add ?fail=1 to the URL) to exercise error states. */
 export const MOCK_FAILURE_RATE = 0
 
+/** Backend base URL (e.g. http://localhost:8000/api). Set to an empty string to use the built-in mock data. */
 export const API_BASE_URL = process.env.NEXT_PUBLIC_CITYPULSE_API_URL ?? ''
 
 export function decide(score: number): CityAction {

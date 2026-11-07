@@ -36,6 +36,14 @@ async function mock<T>(produce: () => T | Promise<T>, canFail = true): Promise<A
   }
 }
 
+async function errorMessage(res: Response): Promise<string> {
+  try {
+    const body = await res.json()
+    if (typeof body?.detail === 'string') return body.detail
+  } catch {}
+  return `HTTP ${res.status}`
+}
+
 async function remote<T>(path: string, body: unknown): Promise<ApiResult<T>> {
   try {
     const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -43,7 +51,7 @@ async function remote<T>(path: string, body: unknown): Promise<ApiResult<T>> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
-    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+    if (!res.ok) return { ok: false, error: await errorMessage(res) }
     return { ok: true, data: (await res.json()) as T }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Network error' }
@@ -63,8 +71,11 @@ export async function analyzeBrand(req: AnalyzeBrandRequest): Promise<ApiResult<
     form.append('category', req.category)
     try {
       const res = await fetch(`${API_BASE_URL}/brand`, { method: 'POST', body: form })
-      if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
-      return { ok: true, data: (await res.json()) as BrandDNA }
+      if (!res.ok) return { ok: false, error: await errorMessage(res) }
+      const brand = (await res.json()) as BrandDNA
+      const swatches = [...brand.swatches]
+      swatches[0] = legibleOnInk(swatches[0])
+      return { ok: true, data: { ...brand, swatches, imageUrl: URL.createObjectURL(req.file) } }
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : 'Network error' }
     }
@@ -80,7 +91,7 @@ export async function analyzeBrand(req: AnalyzeBrandRequest): Promise<ApiResult<
 }
 
 export async function generateAd(req: GenerateAdRequest): Promise<ApiResult<GeneratedAd>> {
-  if (API_BASE_URL) return remote('/generate', { city: req.city.city, brand: req.brand.name })
+  if (API_BASE_URL) return remote('/generate-ad', { city: req.city, brand: req.brand })
   const c = req.city
   return mock(() => ({
     city: c.city,
