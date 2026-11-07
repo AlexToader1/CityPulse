@@ -1,0 +1,5 @@
+numpy
+pandas
+scikit-learn
+pytrends
+urllib3<2

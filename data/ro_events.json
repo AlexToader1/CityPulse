@@ -1,0 +1,86 @@
+{
+  "source": "Curated CityPulse demo records",
+  "last_updated": "2026-11-07",
+  "events": [
+    {
+      "id": "bucharest-christmas-market-2026",
+      "name": "Bucharest Christmas Market",
+      "city": "Bucharest",
+      "start_date": "2026-11-28",
+      "end_date": "2026-12-27",
+      "category": "seasonal",
+      "source_url": "https://www.creart.ro/",
+      "relevance": 0.9
+    },
+    {
+      "id": "cluj-untold-2026",
+      "name": "UNTOLD Festival",
+      "city": "Cluj-Napoca",
+      "start_date": "2026-08-06",
+      "end_date": "2026-08-09",
+      "category": "music",
+      "source_url": "https://untold.com/",
+      "relevance": 1.0
+    },
+    {
+      "id": "iasi-literature-days-2026",
+      "name": "Iasi cultural programme",
+      "city": "Iasi",
+      "start_date": "2026-10-01",
+      "end_date": "2026-10-04",
+      "category": "culture",
+      "source_url": "https://www.primaria-iasi.ro/",
+      "relevance": 0.7
+    },
+    {
+      "id": "constanta-sea-season-2026",
+      "name": "Constanta summer cultural programme",
+      "city": "Constanta",
+      "start_date": "2026-07-01",
+      "end_date": "2026-08-31",
+      "category": "seasonal",
+      "source_url": "https://www.primaria-constanta.ro/",
+      "relevance": 0.8
+    },
+    {
+      "id": "timisoara-jazz-festival-2026",
+      "name": "Timisoara jazz programme",
+      "city": "Timisoara",
+      "start_date": "2026-10-16",
+      "end_date": "2026-10-18",
+      "category": "music",
+      "source_url": "https://www.timisoara.ro/",
+      "relevance": 0.7
+    },
+    {
+      "id": "brasov-christmas-market-2026",
+      "name": "Brasov Christmas Market",
+      "city": "Brasov",
+      "start_date": "2026-11-29",
+      "end_date": "2026-12-31",
+      "category": "seasonal",
+      "source_url": "https://www.brasovcity.ro/",
+      "relevance": 0.9
+    },
+    {
+      "id": "sibiu-christmas-market-2026",
+      "name": "Sibiu Christmas Market",
+      "city": "Sibiu",
+      "start_date": "2026-11-13",
+      "end_date": "2027-01-03",
+      "category": "seasonal",
+      "source_url": "https://targuldecraciun.sibiu.ro/",
+      "relevance": 1.0
+    },
+    {
+      "id": "craiova-christmas-market-2026",
+      "name": "Craiova Christmas Market",
+      "city": "Craiova",
+      "start_date": "2026-11-14",
+      "end_date": "2027-01-05",
+      "category": "seasonal",
+      "source_url": "https://www.primariacraiova.ro/",
+      "relevance": 0.9
+    }
+  ]
+}
