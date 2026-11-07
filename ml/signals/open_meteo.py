@@ -77,7 +77,7 @@ def _get_json(url: str, params: dict[str, Any]) -> dict[str, Any]:
         headers={"User-Agent": "CityPulse/0.1"},
     )
     try:
-        with urlopen(request, timeout=20) as response:
+        with urlopen(request, timeout=8) as response:
             return json.load(response)
     except HTTPError as error:
         raise RuntimeError(f"Open-Meteo request failed with HTTP {error.code}") from error

@@ -106,6 +106,9 @@ def get_weather(city: str, days: int = 5) -> dict[str, Any]:
         {**forecast_day, "day": forecast_day["day"].isoformat()}
         for forecast_day in result["forecast"]
     ]
+    weather_path = ROOT / "data" / "weather_agent_forecast.json"
+    with weather_path.open("w", encoding="utf-8") as weather_file:
+        json.dump(result, weather_file, indent=2)
     return result
 
 
@@ -117,7 +120,7 @@ def run_trend_forecast(
     """Run the approved trend command and return its generated JSON."""
     if not 1 <= len(keywords) <= 3:
         raise ValueError("provide between 1 and 3 keywords")
-    output_path = ROOT / "trend_agent_forecast.json"
+    output_path = ROOT / "data" / "trend_agent_forecast.json"
     command = [
         sys.executable,
         str(ROOT / "ml" / "signals" / "simulated_trends.py"),
@@ -139,7 +142,7 @@ def run_trend_forecast(
     )
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or "trend forecast command failed")
-    return read_json_report("trend_agent_forecast.json")
+    return read_json_report("data/trend_agent_forecast.json")
 
 
 def ask_agent(question: str, report_path: str | None = None) -> str:
@@ -221,7 +224,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("question")
     parser.add_argument("--report", help="existing JSON report for the agent to read")
-    parser.add_argument("--output", default="agent_insight.json")
+    parser.add_argument("--output", default="data/agent_insight.json")
     args = parser.parse_args()
 
     output_path = _safe_workspace_path(args.output)
