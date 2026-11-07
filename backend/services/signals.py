@@ -6,8 +6,8 @@ Shape contract: frontend/src/lib/citypulse/types.ts -> CityResult
 
 from __future__ import annotations
 
-import hashlib
 import json
+import logging
 import os
 import threading
 import time
@@ -17,12 +17,15 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
+from backend import config
 from backend.services.compliance_rules import check_copy
 from ml.agent.decide import get_local_context
+from ml.signals import city_trends
 from ml.signals.events import get_real_events
 from ml.signals.open_meteo import WEATHER_DESCRIPTIONS, _get_json
 
 ROOT = Path(__file__).resolve().parents[2]
+log = logging.getLogger(__name__)
 
 THRESHOLDS = {"generate": 60, "light_touch": 30}  # keep in sync with frontend config.ts
 ACTION_COST = {
@@ -32,15 +35,7 @@ ACTION_COST = {
 }
 WINDOW_DAYS = 3          # weather
 HOLIDAY_WINDOW_DAYS = 5  # holidays: a little lead time for greetings
-EVENT_WINDOW_DAYS = 10   # events: ads need lead time, and next weekend is always in range
-
-CATEGORY_KEYWORDS = {
-    "Cafe": ["cafea", "cafenea", "brunch"],
-    "Pharmacy": ["farmacie", "vitamine", "raceala"],
-    "Florist": ["flori", "buchet", "florarie"],
-    "Gym": ["sala fitness", "antrenament", "fitness"],
-    "Supplements": ["suplimente", "proteine", "vitamine"],
-}
+EVENT_WINDOW_DAYS = 21   # events: ads need lead time (big markets are announced weeks ahead)
 
 # ---------------------------------------------------------------- caches
 _cache: dict[str, tuple[float, Any]] = {}
@@ -116,13 +111,10 @@ def get_weather(city: dict[str, Any]) -> list[dict[str, Any]] | None:
     return _cached(f"wx:{city['id']}", 900, lambda: _fetch_weather(city))
 
 
-def weather_signal(days: list[dict[str, Any]] | None) -> tuple[dict[str, Any], str]:
+def weather_signal(days: list[dict[str, Any]] | None) -> tuple[dict[str, Any] | None, str]:
     """-> (signal, motif hint). motif hint is 'storm' | 'heat' | 'plain'."""
     if not days:
-        return (
-            {"type": "weather", "label": "Weather unavailable", "source": "simulated", "strength": 0},
-            "plain",
-        )
+        return None, "plain"
     worst_rain = max(days, key=lambda d: (d["rain_prob"], d["rain_mm"]))
     hottest = max(days, key=lambda d: d["tmax"])
     coldest = min(days, key=lambda d: d["tmin"])
@@ -155,36 +147,6 @@ def _norm(text: str) -> str:
     return "".join(c for c in folded.casefold() if c.isalnum())
 
 
-def _simulated_trend(city: str, category: str) -> dict[str, Any]:
-    """Deterministic stand-in so the demo is stable and offline-friendly."""
-    week = date.today().isocalendar()
-    digest = hashlib.sha256(f"{city}|{category}|{week.year}-{week.week}".encode()).digest()
-    value = digest[0] % 100  # 0..99
-    strength = round(6 + value * 0.22)  # 6..28
-    label = f"{CATEGORY_KEYWORDS[category][0].capitalize()} searches " + (
-        "up" if value >= 60 else "steady" if value >= 30 else "cooling"
-    )
-    return {"type": "trend", "label": label, "source": "simulated", "strength": strength}
-
-
-def _fetch_regional_trends(category: str) -> dict[str, Any]:
-    """ONE Google Trends round-trip per category: interest per Romanian county + national momentum."""
-    from pytrends.request import TrendReq
-
-    keywords = CATEGORY_KEYWORDS[category][:2]
-    trends = TrendReq(hl="ro-RO", tz=120, retries=2, backoff_factor=0.3, timeout=(5, 10))
-    trends.build_payload(kw_list=keywords, timeframe="today 3-m", geo="RO")
-    over_time = trends.interest_over_time()
-    by_region = trends.interest_by_region(resolution="REGION", inc_low_vol=True)
-    if over_time.empty or by_region.empty:
-        raise RuntimeError("Google Trends returned no data")
-    series = over_time[keywords].mean(axis=1).tolist()
-    recent, older = series[-7:], series[-28:-7] or series[-7:]
-    momentum = (sum(recent) / len(recent) - sum(older) / len(older)) / max(sum(older) / len(older), 1)
-    regions = {_norm(str(name)): float(row[keywords].mean()) for name, row in by_region.iterrows()}
-    return {"regions": regions, "momentum": momentum, "keyword": keywords[0]}
-
-
 def _with_timeout(fn, seconds: float):
     pool = ThreadPoolExecutor(max_workers=1)
     try:
@@ -193,34 +155,114 @@ def _with_timeout(fn, seconds: float):
         pool.shutdown(wait=False)
 
 
-def _live_trend(city: dict[str, Any], category: str) -> dict[str, Any] | None:
-    if os.getenv("CITYPULSE_LIVE_TRENDS", "1") == "0":
+TREND_FRESH_S = 6 * 3600          # reuse a fetched result this long
+TREND_STALE_OK_S = 7 * 24 * 3600  # when Google blocks us, older real data still beats nothing
+TREND_BLOCK_S = 15 * 60           # pause all Google requests this long after being blocked
+TREND_CACHE_FILE = config.STORAGE_DIR / "trends_cache.json"
+_disk_lock = threading.Lock()
+_trends_blocked_until = 0.0
+
+
+def _disk_get(key: str) -> tuple[float, Any] | None:
+    try:
+        with _disk_lock:
+            entry = json.loads(TREND_CACHE_FILE.read_text(encoding="utf-8")).get(key)
+    except (OSError, ValueError):
         return None
-    data = _cached(
-        f"trend:{category}",
-        6 * 3600,
-        lambda: _with_timeout(lambda: _fetch_regional_trends(category), 20),
-        fail_ttl=1800,  # Google rate-limits aggressively; back off for 30 min
+    return (float(entry["ts"]), entry["value"]) if entry else None
+
+
+def _disk_put(key: str, value: Any) -> None:
+    try:
+        with _disk_lock:
+            try:
+                data = json.loads(TREND_CACHE_FILE.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                data = {}
+            data[key] = {"ts": time.time(), "value": value}
+            tmp = TREND_CACHE_FILE.with_suffix(".tmp")
+            tmp.write_text(json.dumps(data), encoding="utf-8")
+            tmp.replace(TREND_CACHE_FILE)
+    except OSError:
+        log.warning("could not write %s", TREND_CACHE_FILE)
+
+
+def _fetch_trend_resilient(city: dict[str, Any], category: str) -> dict[str, Any]:
+    """Google Trends for a city: fresh disk copy -> live fetch -> stale disk copy when Google blocks us."""
+    global _trends_blocked_until
+    key = f"ctrend:{city['id']}:{category}"
+    stored = _disk_get(key)
+    if stored and time.time() - stored[0] < TREND_FRESH_S:
+        return stored[1]
+    try:
+        if time.time() < _trends_blocked_until:
+            raise RuntimeError("Google Trends is blocking requests, backing off")
+        value = _with_timeout(lambda: city_trends.fetch_city_trend(city["id"], category), 30)
+    except Exception as exc:
+        text = str(exc)
+        if "sorry" in text or "429" in text or "Too Many" in text:
+            _trends_blocked_until = time.time() + TREND_BLOCK_S
+        log.warning("Google Trends failed for %s (%s): %s", city["id"], category, text[:140])
+        if stored and time.time() - stored[0] < TREND_STALE_OK_S:
+            return stored[1]  # last real data we have
+        raise
+    _disk_put(key, value)
+    return value
+
+
+def _live_city_trend(city: dict[str, Any], category: str) -> dict[str, Any] | None:
+    """Google Trends for this city's county (cached; None when Google gives us nothing)."""
+    if os.getenv("CITYPULSE_LIVE_TRENDS", "1") == "0" or city["id"] not in city_trends.GEO:
+        return None
+    return _cached(
+        f"ctrend:{city['id']}:{category}",
+        TREND_FRESH_S,
+        lambda: _fetch_trend_resilient(city, category),
+        fail_ttl=600,
     )
+
+
+def warm_trends(category: str = "Cafe") -> None:
+    """Fill the trend cache in the background (called at startup) so the first request is fast."""
+    for city in load_cities():
+        _live_city_trend(city, category)
+
+
+def _short(query: str, limit: int = 30) -> str:
+    return query if len(query) <= limit else query[: limit - 1].rstrip() + "…"
+
+
+def trend_signals(city: dict[str, Any], category: str) -> list[dict[str, Any]]:
+    """Search signals for a city: how the category's searches moved, plus its popular local query."""
+    data = _live_city_trend(city, category)
     if not data:
-        return None
-    county, name = _norm(city["county"]), _norm(city["name"])
-    aliases = {"bucharest": "bucuresti"}
-    wanted = {county, name, aliases.get(county, county), aliases.get(name, name)}
-    interest = next((v for k, v in data["regions"].items() if any(w in k for w in wanted)), None)
-    if interest is None:
-        return None
-    momentum = data["momentum"]
-    strength = 5 + interest * 0.2 + max(-8.0, min(8.0, momentum * 20))
-    direction = "up" if momentum > 0.1 else "cooling" if momentum < -0.1 else "steady"
-    label = f"{data['keyword'].capitalize()} searches {direction}"
-    if interest >= 90:
-        label += " (top region)"
-    return {"type": "trend", "label": label, "source": "live", "strength": round(max(3, min(30, strength)))}
+        return []  # no real search data right now: show no search signal rather than an invented one
+    momentum = float(data["momentum"])
+    pct = round(momentum * 100)
+    if momentum >= 0.1:
+        label = f'Searches for "{data["keyword"]}" up {pct}%'
+    elif momentum <= -0.1:
+        label = f'Searches for "{data["keyword"]}" down {abs(pct)}%'
+    else:
+        label = f'Searches for "{data["keyword"]}" steady'
+    strength = 5 + float(data["level"]) * 0.12 + max(-8.0, min(10.0, momentum * 25))
+    signals = [{"type": "trend", "label": label, "source": "live", "strength": round(max(3, min(28, strength)))}]
+    if data["rising"]:
+        signals.append({"type": "trend", "label": f'Rising search: "{_short(data["rising"][0][0])}"', "source": "live", "strength": 8})
+    elif data["top"]:
+        signals.append({"type": "trend", "label": f'Top search: "{_short(data["top"][0][0])}"', "source": "live", "strength": 4})
+    return signals
 
 
-def trend_signal(city: dict[str, Any], category: str) -> dict[str, Any]:
-    return _live_trend(city, category) or _simulated_trend(city["name"], category)
+def _dedupe_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep the first of events whose names contain each other ("X" and "X Opening")."""
+    kept: list[dict[str, Any]] = []
+    for ev in events:
+        name = _norm(str(ev.get("name", "")))
+        if any(name and (name in _norm(str(k.get("name", ""))) or _norm(str(k.get("name", ""))) in name) for k in kept):
+            continue
+        kept.append(ev)
+    return kept
 
 
 # ---------------------------------------------------------------- copy
@@ -267,16 +309,22 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
         ctx = {"events": [], "holidays": [], "namedays": []}
 
     try:
-        events = get_real_events(city["name"], EVENT_WINDOW_DAYS)["events"]
+        events = _dedupe_events(get_real_events(city["name"], EVENT_WINDOW_DAYS)["events"])
     except Exception:
         events = []
 
-    signals: list[dict[str, Any]] = [wx_signal]
+    signals: list[dict[str, Any]] = [wx_signal] if wx_signal else []
     top_event = None
     soon = (date.today() + timedelta(days=WINDOW_DAYS)).isoformat()
     for ev in events[:2]:  # already sorted by relevance
         top_event = top_event or ev
-        proximity = 1.0 if ev["start_date"] <= soon else 0.7
+        # Already running or starting within the weather window counts fully; later events count less.
+        if ev["start_date"] <= soon:
+            proximity = 1.0
+        elif ev["start_date"] <= (date.today() + timedelta(days=10)).isoformat():
+            proximity = 0.8
+        else:
+            proximity = 0.55
         signals.append(
             {
                 "type": "event",
@@ -291,7 +339,7 @@ def build_city_result(city: dict[str, Any], category: str) -> dict[str, Any]:
         signals.append(
             {"type": "holiday", "label": str(hol.get("name", "Public holiday")), "source": "curated", "strength": 30}
         )
-    signals.append(trend_signal(city, category))
+    signals.extend(trend_signals(city, category))
 
     score = max(0, min(100, round(sum(s["strength"] for s in signals))))
     action = decide(score)

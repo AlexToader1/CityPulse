@@ -1,6 +1,7 @@
 'use client'
 
-import { animate, useReducedMotion } from 'framer-motion'
+import { animate } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { useEffect, useRef, useState, type ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
@@ -74,6 +75,15 @@ export function DemoBadge() {
     <span className="nb-pill bg-white">
       <span className="size-2 rounded-full bg-orange ring-2 ring-ink" aria-hidden="true" />
       <span className="mono-label">{API_BASE_URL ? 'Live signals + demo events' : 'Demo data'}</span>
+    </span>
+  )
+}
+
+export function LiveBadge() {
+  return (
+    <span className="nb-pill bg-white">
+      <span className="size-2 rounded-full bg-lime ring-2 ring-ink" aria-hidden="true" />
+      <span className="mono-label">Live data</span>
     </span>
   )
 }

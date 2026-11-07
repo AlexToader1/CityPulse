@@ -1,6 +1,7 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { useEffect, useState } from 'react'
 import type { BrandDNA } from '@/lib/citypulse/types'
 import { ArrowButton } from './primitives'

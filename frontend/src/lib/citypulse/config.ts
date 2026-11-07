@@ -24,8 +24,12 @@ export const MOCK_DELAY_MS = { min: 300, max: 900 } as const
 /** Set to a value > 0 (or add ?fail=1 to the URL) to exercise error states. */
 export const MOCK_FAILURE_RATE = 0
 
-/** Backend base URL (e.g. http://localhost:8000/api). Set to an empty string to use the built-in mock data. */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_CITYPULSE_API_URL ?? ''
+/**
+ * Backend base URL. Defaults to the local API, which computes each city's index from real weather,
+ * local events and Google searches. Set NEXT_PUBLIC_CITYPULSE_API_URL to an empty string to use the
+ * built-in mock data instead (no backend needed).
+ */
+export const API_BASE_URL = process.env.NEXT_PUBLIC_CITYPULSE_API_URL ?? 'http://127.0.0.1:8000/api'
 
 /** Backend origin (e.g. http://localhost:8000): the API base URL without its /api suffix. */
 export const BACKEND_ORIGIN = (API_BASE_URL || 'http://localhost:8000/api').replace(/\/api\/?$/, '')

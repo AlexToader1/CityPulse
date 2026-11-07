@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { fetchCities } from '@/lib/citypulse/api'
 import { applyPreset, feedFromCities } from '@/lib/citypulse/cities'
+import { API_BASE_URL } from '@/lib/citypulse/config'
 import { EVENT_PRESETS } from '@/lib/citypulse/mock-data'
 import type { BrandDNA, BusinessCategory, CityResult } from '@/lib/citypulse/types'
 import { AdStudio, type AdView } from './ad-studio'
@@ -11,7 +12,7 @@ import { AppHeader } from './app-header'
 import { BrandStrip } from './brand-strip'
 import { DemoAutopilot, type DemoActions } from './demo-autopilot'
 import { Heatmap, type HeatmapHandle } from './heatmap'
-import { DemoBadge } from './primitives'
+import { DemoBadge, LiveBadge } from './primitives'
 import { SignalFeed, type FeedBurst } from './signal-feed'
 import { StatStrip } from './stat-strip'
 import { useToast } from './toast'
@@ -79,7 +80,7 @@ export function Dashboard({
   return (
     <div className="min-h-dvh">
       <AppHeader label="Step 2 of 2: Geo campaign HQ" onHome={onHome}>
-        <DemoBadge />
+        {data?.ok && API_BASE_URL ? <LiveBadge /> : <DemoBadge />}
         <DemoAutopilot actions={demoActions} />
       </AppHeader>
 

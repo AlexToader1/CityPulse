@@ -1,6 +1,7 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { Minus, Plus, RotateCcw } from 'lucide-react'
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import { topSignal } from '@/lib/citypulse/cities'

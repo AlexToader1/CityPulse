@@ -1,6 +1,7 @@
 'use client'
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { Check, Upload as UploadIcon, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import useSWR from 'swr'

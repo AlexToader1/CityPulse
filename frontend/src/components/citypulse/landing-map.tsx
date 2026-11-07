@@ -1,6 +1,7 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { useReducedMotionSafe as useReducedMotion } from '@/lib/use-reduced-motion'
 import { useMemo } from 'react'
 import useSWR from 'swr'
 import { fetchCities, fetchCityList } from '@/lib/citypulse/api'
@@ -8,7 +9,7 @@ import { chaikin, fitProjection, ROMANIA_OUTLINE } from '@/lib/citypulse/geo'
 import { heatVar } from '@/lib/citypulse/heat'
 import { ALL_CITIES } from '@/lib/citypulse/mock-data'
 import type { CityResult } from '@/lib/citypulse/types'
-import { DemoBadge } from './primitives'
+import { DemoBadge, LiveBadge } from './primitives'
 
 const W = 600
 const H = 430
@@ -24,6 +25,7 @@ async function fetchLandingCities(): Promise<CityResult[]> {
 export function LandingMap() {
   const reduce = useReducedMotion()
   const { data: landingCities } = useSWR('landing-cities', fetchLandingCities, { revalidateOnFocus: false })
+  const live = Boolean(landingCities?.length)  // real data from the API (no mock fallback)
   const { outline, pins, ribbon } = useMemo(() => {
     const proj = fitProjection(W, H, 34)
     const ring = chaikin(ROMANIA_OUTLINE.map(proj.project), 3)
@@ -44,11 +46,11 @@ export function LandingMap() {
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={{ type: 'spring', stiffness: 220, damping: 22, delay: 0.5 }}
       className="nb-card overflow-hidden shadow-nb-lg"
-      aria-label="Romania, city by city: a demo map of adapted cities and cities that kept the master ad"
+      aria-label={`Romania, city by city: a ${live ? 'live' : 'demo'} map of adapted cities and cities that kept the master ad`}
     >
       <div className="flex items-center justify-between gap-3 border-b-2 border-ink px-4 py-3">
         <figcaption className="font-bold">Romania, city by city</figcaption>
-        <DemoBadge />
+        {live ? <LiveBadge /> : <DemoBadge />}
       </div>
 
       <div
