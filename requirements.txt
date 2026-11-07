@@ -3,3 +3,4 @@ pandas
 scikit-learn
 pytrends
 urllib3<2
+google-genai

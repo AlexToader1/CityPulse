@@ -1,0 +1,36 @@
+{
+  "decision": "GENERATE",
+  "should_change_ad": true,
+  "recommended_day": "2026-11-14",
+  "confidence": 0.88,
+  "reasons": [
+    "Interesul prognozat pentru căutările de cafea atinge nivelul maxim de 100 pe 14 noiembrie 2026.",
+    "Vremea rece din Cluj-Napoca, cu temperaturi minime negative (-2.3°C) și maxime sub 10°C, stimulează consumul de cafea caldă.",
+    "Evenimentul local Cluj Student Weekend (13-15 noiembrie 2026) oferă un context excelent de conversie în rândul tinerilor și studenților."
+  ],
+  "evidence": [
+    {
+      "source": "run_trend_forecast",
+      "metric": "best_next_7_days",
+      "value": "2026-11-14",
+      "peak_interest": 100
+    },
+    {
+      "source": "get_weather",
+      "metric": "temperature_range",
+      "value": "-2.3°C to 8.1°C",
+      "date": "2026-11-07"
+    },
+    {
+      "source": "get_local_context",
+      "metric": "local_event",
+      "value": "Cluj Student Weekend (demo)",
+      "start_date": "2026-11-13",
+      "end_date": "2026-11-15"
+    }
+  ],
+  "limitations": [
+    "Datele de context local sunt etichetate drept demo și trebuie confirmate operațional înainte de lansarea bugetelor mari.",
+    "Prognoza meteo acoperă o fereastră de 5 zile, iar condițiile pentru data de 14 noiembrie 2026 trebuie reverificate mai aproape de lansare."
+  ]
+}

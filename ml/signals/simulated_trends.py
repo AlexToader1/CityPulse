@@ -271,7 +271,13 @@ def forecast_trend(
     rolling_values = values.copy()
     forecast: list[TrendPoint] = []
     for offset in range(1, horizon + 1):
-        prediction = max(0.0, float(model.predict(_features(rolling_values, lags).reshape(1, -1))[0]))
+        prediction = min(
+            100.0,
+            max(
+                0.0,
+                float(model.predict(_features(rolling_values, lags).reshape(1, -1))[0]),
+            ),
+        )
         forecast_day = history[-1].day + timedelta(days=offset * interval_days)
         forecast.append(TrendPoint(forecast_day, prediction))
         rolling_values.append(prediction)
